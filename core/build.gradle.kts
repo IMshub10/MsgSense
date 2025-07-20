@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.summer.core"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 28
@@ -49,6 +49,7 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.android)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.androidx.hilt.common)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -71,10 +72,11 @@ dependencies {
     implementation(libs.libphonenumber)
 
     //paging
-    // ✅ Required for PagingSource support in DAO
     api(libs.androidx.room.paging)
-    // Paging 3 core (you probably already have this)
     api(libs.androidx.paging.runtime)
+
+    //WorkManager
+    api(libs.androidx.work.runtime.ktx)
 
     //debugImplementation(libs.leakcanary.android)
 
