@@ -5,6 +5,8 @@ import android.view.MenuItem
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 
@@ -13,6 +15,8 @@ abstract class BaseActivity<B : ViewDataBinding> : AppCompatActivity() {
     @get:LayoutRes
     protected abstract val layoutResId: Int
     
+    protected open val isFullScreen: Boolean = false
+
     private var binding: B? = null
     protected val mBinding: B
         get() = binding!!
@@ -21,7 +25,27 @@ abstract class BaseActivity<B : ViewDataBinding> : AppCompatActivity() {
         onPreCreated()
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, layoutResId)
+        if (!isFullScreen) handleWindowInsets(true)
         onActivityReady(savedInstanceState)
+    }
+
+    /**
+     * Toggle window insets handling for status bar
+     * @param applyInsets If true, adds padding for status bar. If false, removes padding
+     */
+    protected fun handleWindowInsets(applyInsets: Boolean) {
+        if (applyInsets) {
+            ViewCompat.setOnApplyWindowInsetsListener(mBinding.root) { view, insets ->
+                val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+                view.setPadding(0, statusBarHeight, 0, 0)
+                insets
+            }
+        } else {
+            ViewCompat.setOnApplyWindowInsetsListener(mBinding.root) { _, insets ->
+                mBinding.root.setPadding(0, 0, 0, 0)
+                insets
+            }
+        }
     }
 
     protected fun setupActionBar(toolbar: Toolbar) {
