@@ -2,6 +2,7 @@ package com.summer.notifai.ui.home.contactlist
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -13,7 +14,6 @@ import com.summer.core.ui.model.SmsImportanceType
 import com.summer.notifai.R
 import com.summer.notifai.databinding.FragNewContactListBinding
 import com.summer.notifai.ui.common.PagingLoadStateAdapter
-import com.summer.notifai.ui.inbox.SmsInboxActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -67,15 +67,12 @@ class NewContactListFrag : BaseFragment<FragNewContactListBinding>() {
                 lifecycleScope.launch(Dispatchers.Default) {
                     val id = viewModel.getOrInsertSenderId(model)
                     withContext(Dispatchers.Main) {
-                        activity?.let {
-                            startActivity(
-                                SmsInboxActivity.onNewInstance(
-                                    context = it,
-                                    senderAddressId = id,
-                                    smsImportanceType = SmsImportanceType.IMPORTANT
-                                )
-                            )
-                        }
+                        // Navigate to inbox using Navigation component
+                        val bundle = bundleOf(
+                            "senderAddressId" to id,
+                            "smsImportanceType" to SmsImportanceType.IMPORTANT.value
+                        )
+                        findNavController().navigate(R.id.smsInboxFragment, bundle)
                         contactClicked = false
                     }
                 }

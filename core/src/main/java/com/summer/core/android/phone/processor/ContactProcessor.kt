@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
-class ContactProcessor<T>(private val context: Context) {
+class ContactProcessor(private val context: Context) {
     fun fetchContacts(lastUpdatedAt: Long = 0): Flow<ResultState<List<ContactEntity>>> = flow {
         emit(ResultState.InProgress)
 

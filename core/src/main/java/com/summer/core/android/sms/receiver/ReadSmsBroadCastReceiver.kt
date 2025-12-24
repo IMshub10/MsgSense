@@ -29,7 +29,7 @@ class ReadSmsBroadcastReceiver : BroadcastReceiver() {
             val permissionManager: IPermissionManager = entryPoint.permissionManager()
             val appNotificationManager = entryPoint.appNotificationManager()
             val isSenderBlockedUseCase = entryPoint.isSenderBlockedUseCase()
-
+            goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 val sms = smsInserter.processIncomingSms(appContext, intent)
 

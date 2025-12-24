@@ -48,8 +48,10 @@ dependencies {
     api(libs.androidx.lifecycle.livedata)
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.android)
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.androidx.hilt.common)
+    api(libs.firebase.crashlytics)
+    api(libs.androidx.hilt.common)
+    api(libs.androidx.hilt.work)
+    kapt(libs.androidx.hilt.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -79,5 +81,14 @@ dependencies {
     api(libs.androidx.work.runtime.ktx)
 
     //debugImplementation(libs.leakcanary.android)
+
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.converter.gson)
+
 
 }

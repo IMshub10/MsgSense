@@ -1,39 +1,38 @@
 package com.summer.notifai.ui.inbox.smsMessages
 
-import android.app.Activity
 import android.app.ProgressDialog
-import android.app.role.RoleManager
 import android.content.Context
-import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.Telephony
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.os.bundleOf
 import androidx.core.view.MenuProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.summer.core.android.notification.AppNotificationManager
 import com.summer.core.android.permission.manager.IPermissionManager
 import com.summer.core.android.sms.constants.Constants.DATE_FLOATER_SHOW_TIME
+import com.summer.core.di.ChatSessionTracker
 import com.summer.core.ui.BaseFragment
+import com.summer.core.ui.model.SmsImportanceType
 import com.summer.core.util.DateUtils
-import com.summer.core.util.showShortToast
 import com.summer.notifai.R
 import com.summer.notifai.databinding.FragSmsInboxBinding
+import com.summer.notifai.ui.MainActivity
 import com.summer.notifai.ui.datamodel.SmsInboxListItem
 import com.summer.notifai.ui.inbox.SmsInboxViewModel
-import com.summer.notifai.ui.search.SearchActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -47,7 +46,13 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
     override val layoutResId: Int
         get() = R.layout.frag_sms_inbox
 
-    private val smsInboxViewModel: SmsInboxViewModel by activityViewModels()
+    private val smsInboxViewModel: SmsInboxViewModel by viewModels()
+
+    @Inject
+    lateinit var chatSessionTracker: ChatSessionTracker
+
+    @Inject
+    lateinit var appNotificationManager: AppNotificationManager
 
     private var _smsInboxAdapter: SmsInboxAdapter? = null
     private val smsInboxAdapter get() = _smsInboxAdapter!!
@@ -65,17 +70,6 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
     @Inject
     lateinit var permissionManager: IPermissionManager
 
-    private val defaultSmsAppLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result: ActivityResult? ->
-        if (result?.resultCode == Activity.RESULT_OK) {
-            showShortToast("Permission set as default")
-        } else {
-            showShortToast("App must be set as default SMS app to function properly.")
-            fallbackToLegacyIntent()
-        }
-    }
-
     override fun onFragmentReady(instanceState: Bundle?) {
         super.onFragmentReady(instanceState)
         mBinding.viewModel = smsInboxViewModel
@@ -84,10 +78,47 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Handle keyboard insets programmatically
+        setupKeyboardInsets()
+
+        // Initialize ViewModel with navigation arguments
+        val args = SmsInboxFragArgs.fromBundle(requireArguments())
+        smsInboxViewModel.setContactInfoModel(
+            targetSmsId = if (args.targetSmsId == 0L) null else args.targetSmsId,
+            senderAddressId = args.senderAddressId,
+            smsImportanceType = SmsImportanceType.fromValue(args.smsImportanceType)
+                ?: SmsImportanceType.ALL
+        )
+
+        setupToolbar()
         setupRecyclerView()
         addMenuItem()
         observeMessages()
         listeners()
+    }
+
+    private fun setupKeyboardInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(mBinding.root) { view, windowInsets ->
+            val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            view.setPadding(0, 0, 0, imeInsets.bottom)
+            windowInsets
+        }
+    }
+
+    private fun setupToolbar() {
+        mBinding.mtFragSmsInboxToolbar.setNavigationOnClickListener {
+            findNavController().popBackStack()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val args = SmsInboxFragArgs.fromBundle(requireArguments())
+        smsInboxViewModel.markSmsListAsRead(requireContext(), args.senderAddressId) {
+            appNotificationManager.clearNotificationForSender(it)
+        }
+        chatSessionTracker.activeSenderAddressId = smsInboxViewModel.senderAddressId
     }
 
     private fun addMenuItem() {
@@ -99,13 +130,13 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_search -> {
-                        startActivity(
-                            SearchActivity.onNewInstance(
-                                context = requireContext(),
-                                isGlobalSearch = false,
-                                senderAddressId = smsInboxViewModel.senderAddressId
-                            )
+                        // Navigate to search using Navigation component
+                        val bundle = bundleOf(
+                            "query" to "",
+                            "searchType" to "1",
+                            "senderAddressId" to smsInboxViewModel.senderAddressId.toString()
                         )
+                        findNavController().navigate(R.id.action_inbox_to_search, bundle)
                         true
                     }
 
@@ -150,7 +181,8 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                 mBinding.etFragSmsInboxMessage.text?.clear()
                 smsInboxViewModel.sendSms(requireContext(), message)
             } else {
-                promptToSetDefaultSmsApp()
+                // Delegate to MainActivity's centralized prompt
+                (activity as? MainActivity)?.promptToSetDefaultSmsApp()
             }
         }
         mBinding.ivFragSmsInboxClose.setOnClickListener {
@@ -198,25 +230,6 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                 onNo()
             }
             .show()
-    }
-
-    private fun promptToSetDefaultSmsApp() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val roleManager =
-                requireContext().getSystemService(RoleManager::class.java) as RoleManager
-            val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
-            defaultSmsAppLauncher.launch(intent)
-        } else {
-            val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
-            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, requireContext().packageName)
-            startActivity(intent)
-        }
-    }
-
-    private fun fallbackToLegacyIntent() {
-        val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
-        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, requireContext().packageName)
-        startActivity(intent)
     }
 
     private fun setupRecyclerView() {
@@ -292,11 +305,11 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 smsInboxViewModel.messageLoader.collectLatest { loader ->
                     loader?.messages?.collectLatest { list ->
-                        smsInboxAdapter.submitList(list, {
+                        smsInboxAdapter.submitList(list) {
                             if (list.isNotEmpty()) {
                                 scrollToTargetIfPresent(smsInboxViewModel.targetSmsId)
                             }
-                        })
+                        }
                     }
                 }
             }

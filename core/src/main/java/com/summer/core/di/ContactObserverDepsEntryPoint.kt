@@ -1,4 +1,4 @@
-package com.summer.notifai.di
+package com.summer.core.di
 
 import com.summer.core.android.phone.service.ContactObserver
 import dagger.hilt.EntryPoint

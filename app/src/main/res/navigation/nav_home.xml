@@ -2,21 +2,43 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_sms_inbox"
+    android:id="@+id/nav_home"
     app:startDestination="@id/smsContactListFrag">
 
     <fragment
         android:id="@+id/smsContactListFrag"
         android:name="com.summer.notifai.ui.home.smscontacts.SmsContactListFrag"
         android:label="SmsContactListFrag"
-        tools:layout="@layout/frag_sms_contact_list" >
+        tools:layout="@layout/frag_sms_contact_list">
+        
         <action
             android:id="@+id/action_smsContactListFrag_to_newContactListFrag"
             app:destination="@id/newContactListFrag" />
+        
+        <!-- Navigate to inbox -->
+        <action
+            android:id="@+id/action_home_to_inbox"
+            app:destination="@id/smsInboxFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <!-- Navigate to settings -->
+        <action
+            android:id="@+id/action_home_to_settings"
+            app:destination="@id/nav_settings" />
+        
+        <!-- Navigate to global search -->
+        <action
+            android:id="@+id/action_home_to_search"
+            app:destination="@id/nav_search" />
     </fragment>
+    
     <fragment
         android:id="@+id/newContactListFrag"
         android:name="com.summer.notifai.ui.home.contactlist.NewContactListFrag"
         android:label="NewContactListFrag"
         tools:layout="@layout/frag_new_contact_list" />
+
 </navigation>

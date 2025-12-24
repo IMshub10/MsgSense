@@ -15,8 +15,12 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.room.Dao
+import com.summer.core.R
+import com.summer.core.android.notification.NotificationChannelType
 import com.summer.core.domain.model.FetchResult
 import com.summer.core.data.repository.SmsRepository
+import com.summer.core.domain.repository.ISmsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,16 +29,22 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * @deprecated Use [SmsProcessingWorker] instead. This service is kept for reference and will be removed in future versions.
+ * Migration path: Use WorkManager's OneTimeWorkRequest to schedule SMS processing tasks.
+ */
+@Deprecated(message = "Use SmsProcessingWorker instead for background processing")
 @AndroidEntryPoint
 class SmsProcessingService : Service() {
 
     @Inject
-    lateinit var repository: SmsRepository
+    lateinit var repository: ISmsRepository
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onCreate() {
         super.onCreate()
+        //TODO(setOngoing() for the notification)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID,
@@ -73,6 +83,7 @@ class SmsProcessingService : Service() {
         }
     }
 
+    @Synchronized
     private fun sendBroadcast(fetchResult: FetchResult) {
         val intent = Intent(ACTION_SMS_PROCESSING_UPDATE)
         intent.putExtra(EXTRA_FETCH_RESULT, fetchResult)
@@ -80,34 +91,36 @@ class SmsProcessingService : Service() {
     }
 
     private fun createNotification(contentText: String): Notification {
-        val channelId = createNotificationChannel()
+        createNotificationChannel()
 
-        return NotificationCompat.Builder(this, channelId)
+        return NotificationCompat.Builder(this, NotificationChannelType.SMS_PROCESSING.channelId)
             .setContentTitle("SMS Processing")
             .setContentText(contentText)
-            .setSmallIcon(android.R.drawable.star_on) //TODO(Replace with icon)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)  // 🔥 Ensures higher priority
+            .setSmallIcon(R.drawable.ic_sms_sync_24x24)
+            .setPriority(NotificationChannelType.SMS_PROCESSING.importance)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setOngoing(true)
             .setAutoCancel(false)
             .build()
     }
 
-    private fun updateNotification(contentText: String) {
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notification = createNotification(contentText)
-        notificationManager.notify(NOTIFICATION_ID, notification)
-    }
-
-    private fun createNotificationChannel(): String {
+    private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            "SMS Processing",
-            NotificationManager.IMPORTANCE_LOW
-        )
+            NotificationChannelType.SMS_PROCESSING.channelId,
+            NotificationChannelType.SMS_PROCESSING.channelName,
+            NotificationChannelType.SMS_PROCESSING.importance
+        ).apply {
+            description = NotificationChannelType.SMS_PROCESSING.description
+        }
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager?.createNotificationChannel(channel)
-        return NOTIFICATION_CHANNEL_ID
+    }
+
+    private fun updateNotification(contentText: String) {
+        val notificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notification = createNotification(contentText)
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -123,7 +136,6 @@ class SmsProcessingService : Service() {
 
     companion object {
         private const val NOTIFICATION_ID = 1
-        private const val NOTIFICATION_CHANNEL_ID = "sms_processing_channel"
         const val ACTION_SMS_PROCESSING_UPDATE =
             "com.summer.core.android.sms.ACTION_SMS_PROCESSING_UPDATE"
         const val EXTRA_FETCH_RESULT = "extra_fetch_result"

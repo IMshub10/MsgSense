@@ -64,7 +64,7 @@ class ContactObserver
         repository: IContactRepository
     ) {
         val lastCheckedTimestamp = repository.getPhoneTableLastUpdated()
-        val contactProcessor = ContactProcessor<ContactEntity>(context)
+        val contactProcessor = ContactProcessor(context)
 
         contactProcessor.fetchContacts(lastCheckedTimestamp).collect { result ->
             when (result) {

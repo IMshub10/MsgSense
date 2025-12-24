@@ -48,8 +48,7 @@ class PermissionsFrag : BaseFragment<FragPermissionsBinding>() {
             val deniedPermissions = permissions.filterValues { !it }.keys
             if (deniedPermissions.isEmpty()) {
                 showShortToast("All necessary permissions granted!")
-                if (findNavController().currentDestination?.id == R.id.permissionsFrag)
-                    findNavController().navigate(R.id.action_permissionsFrag_to_smsProcessingFrag)
+                navigateToSmsProcessing()
             } else {
                 showRationaleOrSettings(deniedPermissions)
             }
@@ -85,9 +84,25 @@ class PermissionsFrag : BaseFragment<FragPermissionsBinding>() {
         if (missingPermissions.isNotEmpty()) {
             permissionLauncher.launch(missingPermissions.toTypedArray())
         } else {
-            if (findNavController().currentDestination?.id == R.id.permissionsFrag)
-                findNavController().navigate(R.id.action_permissionsFrag_to_smsProcessingFrag)
+            navigateToSmsProcessing()
             showShortToast("All permissions are already granted!")
+        }
+    }
+
+    /**
+     * Navigate to SMS processing - handles both onboarding flow and direct access paths.
+     */
+    private fun navigateToSmsProcessing() {
+        val currentDestId = findNavController().currentDestination?.id
+        when (currentDestId) {
+            R.id.permissionsFrag -> {
+                // From onboarding flow
+                findNavController().navigate(R.id.action_permissionsFrag_to_smsProcessingFrag)
+            }
+            R.id.permissionsFragDirect -> {
+                // From direct splash navigation
+                findNavController().navigate(R.id.action_permissionsDirect_to_smsProcessing)
+            }
         }
     }
 
@@ -119,6 +134,14 @@ class PermissionsFrag : BaseFragment<FragPermissionsBinding>() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        // Check if all permissions already granted - skip to next step
+        if (permissionManager.hasRequiredPermissions()) {
+            navigateToSmsProcessing()
+            return
+        }
+        
         setRecyclerview()
         listeners()
     }

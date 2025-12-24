@@ -5,11 +5,13 @@ import android.view.View
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.summer.core.domain.repository.IOnboardingRepository
 import com.summer.notifai.R
 import com.summer.notifai.databinding.FragUserAgreementBinding
 import com.summer.notifai.ui.onboarding.OnboardingViewModel
 import com.summer.core.ui.BaseFragment
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class UserAgreementFrag : BaseFragment<FragUserAgreementBinding>() {
@@ -18,12 +20,20 @@ class UserAgreementFrag : BaseFragment<FragUserAgreementBinding>() {
 
     private val onboardingViewModel: OnboardingViewModel by activityViewModels()
 
-    /*private var _optionsFrag: OptionalAgreementDialogFrag? = null
-    private val optionsFrag: OptionalAgreementDialogFrag
-        get() = _optionsFrag!!*/
+    @Inject
+    lateinit var onboardingRepository: IOnboardingRepository
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        // Check if user already agreed - skip to next step
+        if (onboardingRepository.hasAgreedToUserAgreement()) {
+            if (findNavController().currentDestination?.id == R.id.userAgreementFrag) {
+                findNavController().navigate(R.id.action_userAgreementFrag_to_permissionsFrag)
+            }
+            return
+        }
+        
         listeners()
     }
 
@@ -35,10 +45,7 @@ class UserAgreementFrag : BaseFragment<FragUserAgreementBinding>() {
                     if (findNavController().currentDestination?.id == R.id.userAgreementFrag)
                         findNavController().navigate(R.id.action_userAgreementFrag_to_permissionsFrag)
                 } else {
-                    fragUserAgreementScrollView.smoothScrollTo(
-                        0,
-                        fragUserAgreementScrollView.getChildAt(0).bottom
-                    )
+                    scrollToBottom()
                 }
             }
             fragUserAgreementScrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, _, _, _, _ ->
@@ -49,26 +56,13 @@ class UserAgreementFrag : BaseFragment<FragUserAgreementBinding>() {
         }
     }
 
-    /*private fun initOptionsFrag() {
-        _optionsFrag =
-            OptionalAgreementDialogFrag(object : OptionalAgreementDialogFrag.ClickListener {
-                override fun onAgree() {
-                    onboardingViewModel.onOptionalDataSharingEnabled()
-                    if (findNavController().currentDestination?.id == R.id.userAgreementFrag)
-                        findNavController().navigate(R.id.action_userAgreementFrag_to_permissionsFrag)
-                }
+    private fun scrollToBottom(){
+        with(mBinding){
+            fragUserAgreementScrollView.smoothScrollTo(
+                0,
+                fragUserAgreementScrollView.getChildAt(0).bottom
+            )
+        }
+    }
 
-                override fun onDisagree() {
-                    onboardingViewModel.onOptionalDataSharingDisabled()
-                    if (findNavController().currentDestination?.id == R.id.userAgreementFrag)
-                        findNavController().navigate(R.id.action_userAgreementFrag_to_permissionsFrag)
-                }
-            })
-    }*/
-
-    /*override fun onDestroyView() {
-        super.onDestroyView()
-        _optionsFrag?.dismiss()
-        _optionsFrag = null
-    }*/
 }

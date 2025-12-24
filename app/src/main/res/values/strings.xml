@@ -1,4 +1,5 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <string name="app_name">NotifAI</string>
     <string name="permissions">Permissions</string>
     <string name="title_user_agreement">User Agreement</string>
@@ -90,4 +91,5 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="store_messages_in_system_sms_inbox">Store messages in system SMS inbox</string>
     <string name="when_enabled_messages_will_also_be_saved_to_android_s_sms_storage_when_disabled_messages_remain_private_within_notifai">When enabled, messages will also be saved to Android\'s SMS storage. When disabled, messages remain private within NotifAI.</string>
+    <string name="processing_error_generic">Unable to process messages. Please try again.</string>
 </resources>

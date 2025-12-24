@@ -10,12 +10,15 @@ import com.summer.core.data.local.model.SearchSmsMessageQueryModel
 import com.summer.core.domain.model.FetchResult
 import com.summer.core.data.local.model.SmsMessageModel
 import com.summer.core.domain.model.SearchSectionResult
+import com.summer.core.domain.model.SmsBatchResult
 import com.summer.core.ui.model.SmsImportanceType
 import kotlinx.coroutines.flow.Flow
 
 interface ISmsRepository {
 
     suspend fun fetchSmsMessagesFromDevice(): Flow<FetchResult>
+
+    suspend fun fetchSmsMessagesFromDevice(onProgress: suspend (processed: Int, total: Int) -> Unit): SmsBatchResult
 
     fun setSmsProcessingStatusCompleted(isCompleted: Boolean)
 

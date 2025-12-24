@@ -3,6 +3,7 @@ package com.summer.notifai.ui.search.searchlist
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
+import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -15,7 +16,6 @@ import com.summer.notifai.R
 import com.summer.notifai.databinding.FragSearchListBinding
 import com.summer.notifai.ui.common.PagingLoadStateAdapter
 import com.summer.notifai.ui.datamodel.GlobalSearchListItem
-import com.summer.notifai.ui.inbox.SmsInboxActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -70,18 +70,12 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
         }
         backPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (senderAddressId == 0L)
-                    findNavController().popBackStack()
-                else
-                    requireActivity().finish()
+                findNavController().popBackStack()
             }
         }
         mBinding.ivFragSearchListBack.setOnClickListener {
             if (findNavController().currentDestination?.id == R.id.searchListFrag)
-                if (senderAddressId == 0L)
-                    findNavController().popBackStack()
-                else
-                    requireActivity().finish()
+                findNavController().popBackStack()
         }
         activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner, backPressedCallback)
     }
@@ -99,28 +93,22 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
             query = args.query,
             itemClickListener = object : SearchListPagingAdapter.GlobalSearchItemClickListener {
                 override fun onSmsClicked(item: GlobalSearchListItem.SmsItem) {
-                    activity?.let {
-                        startActivity(
-                            SmsInboxActivity.onNewInstance(
-                                context = it,
-                                senderAddressId = item.data.senderAddressId,
-                                smsImportanceType = SmsImportanceType.ALL,
-                                targetSmsId = item.data.id
-                            )
-                        )
-                    }
+                    // Navigate to inbox using Navigation component
+                    val bundle = bundleOf(
+                        "senderAddressId" to item.data.senderAddressId,
+                        "smsImportanceType" to SmsImportanceType.ALL.value,
+                        "targetSmsId" to item.data.id
+                    )
+                    findNavController().navigate(R.id.smsInboxFragment, bundle)
                 }
 
                 override fun onConversationClicked(item: GlobalSearchListItem.ConversationItem) {
-                    activity?.let {
-                        startActivity(
-                            SmsInboxActivity.onNewInstance(
-                                context = it,
-                                senderAddressId = item.data.senderAddressId,
-                                smsImportanceType = SmsImportanceType.ALL
-                            )
-                        )
-                    }
+                    // Navigate to inbox using Navigation component
+                    val bundle = bundleOf(
+                        "senderAddressId" to item.data.senderAddressId,
+                        "smsImportanceType" to SmsImportanceType.ALL.value
+                    )
+                    findNavController().navigate(R.id.smsInboxFragment, bundle)
                 }
 
                 override fun onContactClicked(item: GlobalSearchListItem.ContactItem) {
@@ -128,15 +116,12 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
                     lifecycleScope.launch(Dispatchers.Default) {
                         val id = viewModel.getOrInsertSenderId(item.data)
                         withContext(Dispatchers.Main) {
-                            activity?.let {
-                                startActivity(
-                                    SmsInboxActivity.onNewInstance(
-                                        context = it,
-                                        senderAddressId = id,
-                                        smsImportanceType = SmsImportanceType.IMPORTANT
-                                    )
-                                )
-                            }
+                            // Navigate to inbox using Navigation component
+                            val bundle = bundleOf(
+                                "senderAddressId" to id,
+                                "smsImportanceType" to SmsImportanceType.IMPORTANT.value
+                            )
+                            findNavController().navigate(R.id.smsInboxFragment, bundle)
                             contactClicked = false
                         }
                     }

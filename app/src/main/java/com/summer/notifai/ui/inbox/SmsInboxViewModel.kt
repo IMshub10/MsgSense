@@ -142,7 +142,7 @@ class SmsInboxViewModel @Inject constructor(
             scope = viewModelScope
         )
         _messageLoader.value = loader
-        viewModelScope.launch { loader.reinitialize(smsImportanceType, targetSmsId) }
+        viewModelScope.launch(Dispatchers.IO) { loader.reinitialize(smsImportanceType, targetSmsId) }
     }
 
     fun toggleMessageSelection(messageId: Long) {

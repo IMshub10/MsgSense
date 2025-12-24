@@ -37,4 +37,10 @@ object Constants {
     const val SEARCH_NEW_CONTACT_ID = -1000
 
     const val SEARCH_SECTION_MAX_COUNT = 3
+
+    /**
+     * WorkManager unique name for SMS processing tasks.
+     * Used to manage the lifecycle of SMS processing jobs.
+     */
+    const val SMS_PROCESSING_WORK_NAME = "sms_processing_work"
 }

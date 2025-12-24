@@ -7,6 +7,7 @@ import com.summer.core.android.sms.data.mapper.SmsMapper
 import com.summer.core.domain.model.FetchResult
 import com.summer.core.data.local.dao.SmsDao
 import com.summer.core.data.local.entities.SmsEntity
+import com.summer.core.domain.model.SmsBatchResult
 import com.summer.core.ml.model.SmsClassifierModel
 import com.summer.core.util.CountryCodeProvider
 import kotlinx.coroutines.*
@@ -123,6 +124,77 @@ class SmsBatchProcessor @Inject constructor(
             emit(FetchResult.Error(e))
         }
     }.flowOn(Dispatchers.IO)
+
+    suspend fun processSmsInBatches(
+        batchSize: Int,
+        batchProcessingConcurrency: Int,
+        onProgress: suspend (processed: Int, total: Int) -> Unit
+    ): SmsBatchResult {
+        return withContext(Dispatchers.IO) {
+            try {
+                var lastProcessedId = smsDao.getLastInsertedSmsMessageByAndroidSmsId()?.androidSmsId ?: -1
+                var firstProcessedId = smsDao.getFirstInsertedSmsMessageByAndroidSmsId()?.androidSmsId ?: -1
+                var processedCount = smsDao.getTotalProcessedSmsCount()
+                var totalSmsCount = smsContentProvider.getTotalSmsCount()
+                var hasMoreData = true
+
+                while (hasMoreData) {
+                    onProgress(processedCount, totalSmsCount)
+
+                    // Process newly arrived messages
+                    val latestDeviceId = smsContentProvider.getLastAndroidSmsId() ?: -1
+                    if (latestDeviceId > lastProcessedId && lastProcessedId != -1) {
+                        val newCursor = smsContentProvider.getSmsCursorWithOffset(
+                            offsetId = lastProcessedId,
+                            limit = batchSize,
+                            offset = 0,
+                            isOrderAscending = true
+                        )
+
+                        val newMessages = newCursor?.use {
+                            SmsMapper.mapCursorToSmsList(it, smsDao, countryCodeProvider.getMyCountryCode())
+                        } ?: emptyList()
+
+                        totalSmsCount = smsContentProvider.getTotalSmsCount()
+
+                        if (newMessages.isNotEmpty()) {
+                            val classifiedNew = classifySmsBatch(newMessages)
+                            insertClassifiedSms(classifiedNew)
+                            lastProcessedId = classifiedNew.maxOfOrNull { it.androidSmsId ?: lastProcessedId } ?: lastProcessedId
+                            continue
+                        }
+                    }
+
+                    // Process older messages with offset paging
+                    val classifiedResults = processMultipleBatchesAfterId(
+                        batchSize = batchSize,
+                        baseId = firstProcessedId,
+                        concurrency = batchProcessingConcurrency
+                    )
+
+                    val nonEmptyBatches = classifiedResults.filter { it.isNotEmpty() }
+                    if (nonEmptyBatches.isEmpty()) {
+                        hasMoreData = false
+                    } else {
+                        val allMessages = nonEmptyBatches.flatten()
+                        insertClassifiedSms(allMessages)
+                        processedCount += allMessages.size
+                        firstProcessedId = allMessages.minOfOrNull { it.androidSmsId ?: firstProcessedId } ?: firstProcessedId
+                        Log.d(tag, "Inserted ${allMessages.size} SMS (beforeId = $firstProcessedId)")
+
+                        if (nonEmptyBatches.size < batchProcessingConcurrency) {
+                            hasMoreData = false
+                        }
+                    }
+                }
+                SmsBatchResult.Success
+            } catch (e: Exception) {
+                Log.e(tag, "Error processing SMS batches", e)
+                FirebaseCrashlytics.getInstance().recordException(e)
+                SmsBatchResult.Failure(e)
+            }
+        }
+    }
 
     /**
      * Spawns [concurrency] coroutines to fetch and classify SMS messages in parallel,

@@ -36,12 +36,15 @@ abstract class SmsDatabase : RoomDatabase() {
                     context.applicationContext,
                     SmsDatabase::class.java,
                     DB_NAME
-                ).addCallback(object : Callback() {
-                    override fun onCreate(db: SupportSQLiteDatabase) {
-                        super.onCreate(db)
-                        initData()
-                    }
-                }).build()
+                ).fallbackToDestructiveMigration()
+                    .addCallback(
+                        object : Callback() {
+                            override fun onCreate(db: SupportSQLiteDatabase) {
+                                super.onCreate(db)
+                                initData()
+                            }
+                        }
+                    ).build()
                 INSTANCE = instance
                 instance
             }

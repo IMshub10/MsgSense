@@ -3,13 +3,10 @@ package com.summer.core.data.repository
 import android.util.Log
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.summer.core.android.sms.data.source.ISmsContentProvider
-import com.summer.core.domain.repository.IOnboardingRepository
 import com.summer.core.data.local.dao.SmsDao
-import com.summer.core.data.local.preference.SharedPreferencesManager
 import com.summer.core.data.local.preference.PreferenceKey
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.summer.core.data.local.preference.SharedPreferencesManager
+import com.summer.core.domain.repository.IOnboardingRepository
 import javax.inject.Inject
 
 
@@ -19,9 +16,6 @@ class OnboardingRepository @Inject constructor(
     private val smsContentProvider: ISmsContentProvider
 ) : IOnboardingRepository {
     override fun hasAgreedToUserAgreement(): Boolean {
-        CoroutineScope(Dispatchers.IO).launch {
-            smsDao.getTotalProcessedSmsCount()
-        }
         return sharedPreferencesManager.getDataBoolean(PreferenceKey.USER_AGREEMENT)
     }
 

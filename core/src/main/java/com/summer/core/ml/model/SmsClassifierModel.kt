@@ -19,6 +19,7 @@ import com.summer.core.ml.util.Constants.TOKENIZER_FILE_NAME
 import com.summer.core.ml.util.Constants.VOCAB
 import com.summer.core.ml.tokenizer.WordPieceTokenizer
 import com.summer.core.util.roundToTwoDecimalPlaces
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONObject
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -28,7 +29,7 @@ import javax.inject.Singleton
 import kotlin.math.exp
 
 @Singleton
-class SmsClassifierModel(context: Context) {
+class SmsClassifierModel(@ApplicationContext context: Context) {
     private var ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
     private var ortSession: OrtSession
     private var vocab: Map<String, Long>
@@ -148,9 +149,9 @@ class SmsClassifierModel(context: Context) {
     companion object {
         fun isEnoughMemoryAvailable(context: Context): Boolean {
             val activityManager =
-                context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
             val memoryInfo = ActivityManager.MemoryInfo()
-            activityManager.getMemoryInfo(memoryInfo)
+            activityManager?.getMemoryInfo(memoryInfo)
 
             val availableRam = memoryInfo.availMem / (1024 * 1024) // Convert to MB
             val totalRam = memoryInfo.totalMem / (1024 * 1024) // Convert to MB

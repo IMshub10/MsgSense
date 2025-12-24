@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_main"
+    app:startDestination="@id/splashFragment">
+
+    <!-- Splash/Routing Fragment (replaces StartActivity) -->
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.summer.notifai.ui.splash.SplashFragment"
+        android:label="Splash"
+        tools:layout="@layout/frag_splash">
+
+        <!-- Navigate to home (skip onboarding) -->
+        <action
+            android:id="@+id/action_splash_to_home"
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+
+        <!-- Navigate to onboarding flow (starts at userAgreementFrag by default) -->
+        <action
+            android:id="@+id/action_splash_to_onboarding"
+            app:destination="@id/nav_onboarding"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+
+        <!-- Navigate directly to SMS Processing (for users who have agreed and have permissions but not processed) -->
+        <action
+            android:id="@+id/action_splash_to_smsProcessing"
+            app:destination="@id/smsProcessingFragDirect"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+
+        <!-- Navigate directly to Permissions (for users who have agreed but haven't granted permissions) -->
+        <action
+            android:id="@+id/action_splash_to_permissions"
+            app:destination="@id/permissionsFragDirect"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Onboarding Nested Graph -->
+    <include app:graph="@navigation/nav_onboarding" />
+
+    <!-- SMS Processing Fragment (direct access from splash, bypassing onboarding flow) -->
+    <fragment
+        android:id="@+id/smsProcessingFragDirect"
+        android:name="com.summer.notifai.ui.onboarding.processor.SmsProcessingFrag"
+        android:label="SMSProcessingFrag"
+        tools:layout="@layout/frag_sms_processing">
+        
+        <!-- Navigate to home after processing complete -->
+        <action
+            android:id="@+id/action_smsProcessingDirect_to_home"
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/smsProcessingFragDirect"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Permissions Fragment (direct access from splash, bypassing user agreement) -->
+    <fragment
+        android:id="@+id/permissionsFragDirect"
+        android:name="com.summer.notifai.ui.onboarding.permissions.PermissionsFrag"
+        android:label="PermissionsFrag"
+        tools:layout="@layout/frag_permissions">
+        
+        <!-- Navigate to SMS processing after permissions granted -->
+        <action
+            android:id="@+id/action_permissionsDirect_to_smsProcessing"
+            app:destination="@id/smsProcessingFragDirect"
+            app:popUpTo="@id/permissionsFragDirect"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Home Nested Graph (renamed from nav_contact_list) -->
+    <include app:graph="@navigation/nav_home" />
+
+    <!-- SMS Inbox Fragment with SafeArgs -->
+    <fragment
+        android:id="@+id/smsInboxFragment"
+        android:name="com.summer.notifai.ui.inbox.smsMessages.SmsInboxFrag"
+        android:label="Inbox"
+        tools:layout="@layout/frag_sms_inbox">
+
+        <argument
+            android:name="senderAddressId"
+            app:argType="long" />
+
+        <argument
+            android:name="smsImportanceType"
+            android:defaultValue="-1"
+            app:argType="integer" />
+
+        <argument
+            android:name="targetSmsId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_inbox_to_search"
+            app:destination="@id/nav_search" />
+    </fragment>
+
+    <!-- Search Nested Graph -->
+    <include app:graph="@navigation/nav_search" />
+
+    <!-- Settings Nested Graph -->
+    <include app:graph="@navigation/nav_settings" />
+
+    <!-- Global action to navigate to inbox (used for deep links) -->
+    <action
+        android:id="@+id/action_global_to_inbox"
+        app:destination="@id/smsInboxFragment"
+        app:popUpTo="@id/nav_home"
+        app:popUpToInclusive="false" />
+
+</navigation>

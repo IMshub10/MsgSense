@@ -2,6 +2,7 @@ package com.summer.notifai.ui.search.globalsearch
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -12,7 +13,6 @@ import com.summer.core.ui.model.SmsImportanceType
 import com.summer.notifai.R
 import com.summer.notifai.databinding.FragGlobalSearchBinding
 import com.summer.notifai.ui.datamodel.GlobalSearchListItem
-import com.summer.notifai.ui.inbox.SmsInboxActivity
 import com.summer.notifai.ui.search.globalsearch.GlobalSearchAdapter.GlobalSearchItemClickListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -45,28 +45,22 @@ class GlobalSearchFrag : BaseFragment<FragGlobalSearchBinding>() {
     private fun setupSearchAdapter() {
         _itemClickListener = object : GlobalSearchItemClickListener {
             override fun onSmsClicked(item: GlobalSearchListItem.SmsItem) {
-                activity?.let {
-                    startActivity(
-                        SmsInboxActivity.onNewInstance(
-                            context = it,
-                            senderAddressId = item.data.senderAddressId,
-                            smsImportanceType = SmsImportanceType.ALL,
-                            targetSmsId = item.data.id
-                        )
-                    )
-                }
+                // Navigate to inbox using Navigation component
+                val bundle = bundleOf(
+                    "senderAddressId" to item.data.senderAddressId,
+                    "smsImportanceType" to SmsImportanceType.ALL.value,
+                    "targetSmsId" to item.data.id
+                )
+                findNavController().navigate(R.id.smsInboxFragment, bundle)
             }
 
             override fun onConversationClicked(item: GlobalSearchListItem.ConversationItem) {
-                activity?.let {
-                    startActivity(
-                        SmsInboxActivity.onNewInstance(
-                            context = it,
-                            senderAddressId = item.data.senderAddressId,
-                            smsImportanceType = SmsImportanceType.ALL
-                        )
-                    )
-                }
+                // Navigate to inbox using Navigation component
+                val bundle = bundleOf(
+                    "senderAddressId" to item.data.senderAddressId,
+                    "smsImportanceType" to SmsImportanceType.ALL.value
+                )
+                findNavController().navigate(R.id.smsInboxFragment, bundle)
             }
 
             override fun onContactClicked(item: GlobalSearchListItem.ContactItem) {
@@ -74,15 +68,12 @@ class GlobalSearchFrag : BaseFragment<FragGlobalSearchBinding>() {
                 lifecycleScope.launch(Dispatchers.Default) {
                     val id = viewModel.getOrInsertSenderId(item.data)
                     withContext(Dispatchers.Main) {
-                        activity?.let {
-                            startActivity(
-                                SmsInboxActivity.onNewInstance(
-                                    context = it,
-                                    senderAddressId = id,
-                                    smsImportanceType = SmsImportanceType.IMPORTANT
-                                )
-                            )
-                        }
+                        // Navigate to inbox using Navigation component
+                        val bundle = bundleOf(
+                            "senderAddressId" to id,
+                            "smsImportanceType" to SmsImportanceType.IMPORTANT.value
+                        )
+                        findNavController().navigate(R.id.smsInboxFragment, bundle)
                         contactClicked = false
                     }
                 }
@@ -95,11 +86,7 @@ class GlobalSearchFrag : BaseFragment<FragGlobalSearchBinding>() {
                         searchType = item.id.id.toString(),
                         senderAddressId = "0"
                     )
-                (requireActivity()
-                    .supportFragmentManager
-                    .findFragmentById(R.id.fcv_actSearch_navHost) as NavHostFragment?)
-                    ?.navController
-                    ?.navigate(action)
+                findNavController().navigate(action)
             }
         }
         _searchAdapter = GlobalSearchAdapter(itemClickListener)
@@ -122,7 +109,7 @@ class GlobalSearchFrag : BaseFragment<FragGlobalSearchBinding>() {
     private fun listeners() {
         mBinding.ivFragGlobalSearchBack.setOnClickListener {
             if (findNavController().currentDestination?.id == R.id.globalSearchFrag)
-                requireActivity().finish()
+                findNavController().popBackStack()
         }
         mBinding.etFragGlobalSearchSearch.addTextChangedListener {
             viewModel.searchFilter.value = it.toString()

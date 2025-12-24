@@ -1,8 +1,8 @@
 package com.summer.notifai.ui.home.smscontacts
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asFlow
@@ -15,9 +15,6 @@ import com.summer.notifai.R
 import com.summer.notifai.databinding.FragSmsContactListBinding
 import com.summer.notifai.ui.common.PagingLoadStateAdapter
 import com.summer.notifai.ui.home.HomeViewModel
-import com.summer.notifai.ui.inbox.SmsInboxActivity
-import com.summer.notifai.ui.search.SearchActivity
-import com.summer.notifai.ui.settings.SettingsActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -53,11 +50,11 @@ class SmsContactListFrag : BaseFragment<FragSmsContactListBinding>() {
         }
         mBinding.ivFragContactListSearch.setOnClickListener {
             if (findNavController().currentDestination?.id == R.id.smsContactListFrag)
-                startActivity(SearchActivity.onNewInstance(requireContext()))
+                findNavController().navigate(R.id.action_home_to_search)
         }
         mBinding.ivFragContactListMore.setOnClickListener {
             if (findNavController().currentDestination?.id == R.id.smsContactListFrag)
-                startActivity(SettingsActivity.onNewInstance(requireContext()))
+                findNavController().navigate(R.id.action_home_to_settings)
         }
     }
 
@@ -82,15 +79,12 @@ class SmsContactListFrag : BaseFragment<FragSmsContactListBinding>() {
 
     private fun setupAdapter(currentImportance: Boolean) {
         _smsContactListPagingAdapter = SmsContactListPagingAdapter { model ->
-            activity?.let {
-                startActivity(
-                    SmsInboxActivity.onNewInstance(
-                        context = it,
-                        senderAddressId = model.senderAddressId,
-                        smsImportanceType = currentImportance.toSmsImportanceType()
-                    )
-                )
-            }
+            // Navigate to inbox using Navigation component with SafeArgs bundle
+            val bundle = bundleOf(
+                "senderAddressId" to model.senderAddressId,
+                "smsImportanceType" to currentImportance.toSmsImportanceType().value
+            )
+            findNavController().navigate(R.id.action_home_to_inbox, bundle)
         }
 
         mBinding.rvFragContactList.adapter = contactListPagingAdapter.withLoadStateHeaderAndFooter(

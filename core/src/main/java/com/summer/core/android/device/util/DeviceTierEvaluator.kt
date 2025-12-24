@@ -8,10 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DeviceTierEvaluator @Inject constructor(
-    @ApplicationContext private val context: Context
-
-) {
+class DeviceTierEvaluator @Inject constructor(@ApplicationContext private val context: Context) {
 
     companion object {
         private const val HIGH_END_RAM_GB = 8

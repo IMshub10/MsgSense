@@ -99,7 +99,6 @@ class SmsMessageLoader(
         earliestMessage = combined.lastOrNull()
         latestMessage = combined.firstOrNull()
 
-
         val mappedMessages = combined.map { SmsInboxListItem.Message(it.toSmsMessageDataModel()) }
         val processedMessages = buildListWithHeaders(
             mappedMessages,
@@ -121,7 +120,7 @@ class SmsMessageLoader(
         if (hasStartedObservingDb) return
         hasStartedObservingDb = true
 
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             launch {
                 smsDao.observeMaxDateBySenderId(senderAddressId)
                     .distinctUntilChanged()

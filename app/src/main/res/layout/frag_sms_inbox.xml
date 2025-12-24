@@ -16,6 +16,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/mt_fragSmsInbox_toolbar"
+            style="@style/ToolbarStyle"
+            app:titleTextColor="?label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="@dimen/spacing_atom"
+            app:layout_constraintTop_toTopOf="parent"
+            app:navigationIcon="@drawable/ic_back_24x24"
+            app:title="HDFC Bank" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_sms_messages"
             android:layout_width="match_parent"
@@ -23,7 +34,7 @@
             android:layout_marginBottom="@dimen/spacing_x_small"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toTopOf="@+id/barrier_fragSmsInbox_bottomSection"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/mt_fragSmsInbox_toolbar"
             tools:listitem="@layout/item_received_sms_message" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -40,7 +51,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar_fragSmsInbox"
             tools:text="Saturday, 5th April 2025"
             tools:visibility="visible" />
 
