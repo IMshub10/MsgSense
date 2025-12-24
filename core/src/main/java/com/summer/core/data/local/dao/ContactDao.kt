@@ -25,7 +25,7 @@ interface ContactDao {
     @Query(
         """
     SELECT 
-    COALESCE(c.name, sa.sender_address) AS sender_name,
+    COALESCE(c1.name, c2.name, sa.original_sender_address) AS sender_name,
     s.raw_address,
     s.body AS last_message,
     s.date AS last_message_date,
@@ -50,7 +50,8 @@ interface ContactDao {
     ORDER BY sm.date DESC
     LIMIT 1
 )
-LEFT JOIN contacts c ON c.phone_number = sa.sender_address
+LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
+LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
 GROUP BY s.id
 ORDER BY s.date DESC
 """
@@ -60,7 +61,7 @@ ORDER BY s.date DESC
     @Query(
         """
     SELECT 
-    COALESCE(c.name, sa.sender_address) AS sender_name,
+    COALESCE(c1.name, c2.name, sa.original_sender_address) AS sender_name,
     s.raw_address AS raw_address,
     s.body AS last_message,
     s.date AS last_message_date,
@@ -80,8 +81,9 @@ INNER JOIN sms_messages s ON s.id = (
     ORDER BY sm.date DESC
     LIMIT 1
 )
-LEFT JOIN contacts c ON c.phone_number = sa.sender_address
-WHERE lower(COALESCE(c.name, sa.sender_address)) LIKE '%' || :query || '%'
+LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
+LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
+WHERE lower(COALESCE(c1.name, c2.name, sa.original_sender_address)) LIKE '%' || :query || '%'
 GROUP BY s.id
 ORDER BY s.date DESC
 LIMIT :limit
@@ -92,7 +94,7 @@ LIMIT :limit
     @Query(
         """
     SELECT 
-        COALESCE(c.name, sa.sender_address) AS sender_name,
+        COALESCE(c1.name, c2.name, sa.original_sender_address) AS sender_name,
         s.raw_address AS raw_address,
         s.body AS last_message,
         s.date AS last_message_date,
@@ -112,8 +114,9 @@ LIMIT :limit
         ORDER BY sm.date DESC
         LIMIT 1
     )
-    LEFT JOIN contacts c ON c.phone_number = sa.sender_address
-    WHERE lower(COALESCE(c.name, sa.sender_address)) LIKE '%' || :query || '%'
+    LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
+    LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
+    WHERE lower(COALESCE(c1.name, c2.name, sa.original_sender_address)) LIKE '%' || :query || '%'
         AND sa.is_blocked = 0
     GROUP BY s.id
     ORDER BY s.date DESC
@@ -124,8 +127,9 @@ LIMIT :limit
     @Query(
         """
     SELECT COUNT(*) FROM sender_addresses sa
-    LEFT JOIN contacts c ON c.phone_number = sa.sender_address
-    WHERE lower(COALESCE(c.name, sa.sender_address)) LIKE '%' || :query || '%'
+    LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
+    LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
+    WHERE lower(COALESCE(c1.name, c2.name, sa.original_sender_address)) LIKE '%' || :query || '%'
         AND sa.is_blocked = 0
     """
     )
@@ -134,15 +138,16 @@ LIMIT :limit
     @Query(
         """
     SELECT 
-        COALESCE(c.name, sa.sender_address) AS sender_name,
+        COALESCE(c1.name, c2.name, sa.original_sender_address) AS sender_name,
         sa.id AS sender_address_id,
         sa.sender_type AS sender_type,
         CASE 
-            WHEN sa.sender_type = 'CONTACT' THEN c.phone_number
+            WHEN sa.sender_type = 'CONTACT' THEN COALESCE(c1.phone_number, c2.phone_number)
             ELSE NULL
         END AS phone_number
     FROM sender_addresses sa
-    LEFT JOIN contacts c ON c.phone_number = sa.sender_address
+    LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
+    LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
     WHERE sa.id = :senderAddressId
       AND sa.is_blocked = 0
     """
@@ -153,9 +158,10 @@ LIMIT :limit
 
     @Query(
         """
-    SELECT COALESCE(c.name, sa.sender_address) AS sender_name
+    SELECT COALESCE(c1.name, c2.name, sa.original_sender_address) AS sender_name
     FROM sender_addresses sa
-    LEFT JOIN contacts c ON c.phone_number = sa.sender_address
+    LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
+    LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
     WHERE sa.id = :senderAddressId
       AND sa.is_blocked = 0
     LIMIT 1
@@ -215,17 +221,18 @@ LIMIT :limit
     @Query(
         """
     SELECT 
-        COALESCE(c.name, sa.sender_address) AS sender_name,
+        COALESCE(c1.name, c2.name, sa.original_sender_address) AS sender_name,
         sa.id AS sender_address_id,
         CASE 
-            WHEN sa.sender_type = 'CONTACT' THEN c.phone_number
+            WHEN sa.sender_type = 'CONTACT' THEN COALESCE(c1.phone_number, c2.phone_number)
             ELSE NULL
         END AS phone_number,
         sa.sender_type AS sender_type
     FROM sender_addresses sa
-    LEFT JOIN contacts c ON c.phone_number = sa.sender_address
+    LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
+    LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
     WHERE sa.is_blocked = 1
-      AND lower(COALESCE(c.name, sa.sender_address)) LIKE '%' || :query || '%'
+      AND lower(COALESCE(c1.name, c2.name, sa.original_sender_address)) LIKE '%' || :query || '%'
     ORDER BY sender_name COLLATE NOCASE
     """
     )

@@ -13,7 +13,8 @@ data class ContactEntity(
     @PrimaryKey
     @ColumnInfo(name = "id") val id: Long,
     @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "phone_number") val phoneNumber: String,
+    @ColumnInfo(name = "phone_number") val phoneNumber: String, // Normalized for matching
+    @ColumnInfo(name = "original_phone_number") val originalPhoneNumber: String,
     @ColumnInfo(name = "updated_at_app") val updatedAtApp: Long,
 ) {
     companion object {

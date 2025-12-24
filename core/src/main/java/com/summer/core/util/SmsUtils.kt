@@ -14,18 +14,34 @@ fun String.trimSenderId(): String {
     return replace(Regex("^[A-Z]{2}-"), "")
 }
 
+/**
+ * Strips all non-digit characters from a phone number, keeping only the leading '+' if present.
+ */
+fun String.stripNonDigits(): String {
+    val hasPlus = startsWith("+")
+    val digitsOnly = replace(Regex("[^0-9]"), "")
+    return if (hasPlus) "+$digitsOnly" else digitsOnly
+}
+
+/**
+ * Normalizes a phone number to a consistent format for comparison.
+ * First strips all non-digit characters, then applies country code normalization.
+ */
 fun String.normalizePhoneNumber(defaultCountryCode: Int): String {
+    // First strip all non-digit characters (except leading +)
+    val stripped = stripNonDigits()
+    
     return when {
-        matches(Regex("^\\+[0-9]{10,15}$")) -> this
+        stripped.matches(Regex("^\\+[0-9]{10,15}$")) -> stripped
 
-        matches(Regex("^${defaultCountryCode}[0-9]{10}$")) -> "+$this"
+        stripped.matches(Regex("^${defaultCountryCode}[0-9]{10}$")) -> "+$stripped"
 
-        matches(Regex("^0[0-9]{10}$")) -> "+$defaultCountryCode${substring(1)}"
+        stripped.matches(Regex("^0[0-9]{10}$")) -> "+$defaultCountryCode${stripped.substring(1)}"
 
-        matches(Regex("^[0-9]{10}$")) -> "+$defaultCountryCode$this"
+        stripped.matches(Regex("^[0-9]{10}$")) -> "+$defaultCountryCode$stripped"
 
-        matches(Regex("^[789][0-9]{9}$")) -> "$defaultCountryCode$this"
+        stripped.matches(Regex("^[789][0-9]{9}$")) -> "$defaultCountryCode$stripped"
 
-        else -> this
+        else -> stripped
     }
 }

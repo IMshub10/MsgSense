@@ -42,19 +42,20 @@ interface SmsDao {
     suspend fun getOrInsertSenderId(senderAddress: String, defaultCountryCode: Int): Long {
         val senderType = senderAddress.determineSenderType()
 
-        val trimmedAddress = when (senderType) {
+        val normalizedAddress = when (senderType) {
             SenderType.BUSINESS -> senderAddress.trimSenderId()
             SenderType.CONTACT -> senderAddress.normalizePhoneNumber(defaultCountryCode)
         }.uppercase()
 
         // Check if the sender already exists
-        val existingId = getSenderIdByAddress(trimmedAddress)
+        val existingId = getSenderIdByAddress(normalizedAddress)
         if (existingId != null) return existingId
 
         // Insert new sender and return its ID
         return insertSenderAddress(
             SenderAddressEntity(
-                senderAddress = trimmedAddress,
+                senderAddress = normalizedAddress,
+                originalSenderAddress = senderAddress, // Store original for display
                 senderType = senderType
             )
         )

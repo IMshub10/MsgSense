@@ -3,6 +3,7 @@ package com.summer.core.android.phone.data.mapper
 import android.database.Cursor
 import android.provider.ContactsContract
 import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.util.stripNonDigits
 
 object ContactMapper {
     fun mapCursorToContact(cursor: Cursor): ContactEntity? {
@@ -18,14 +19,14 @@ object ContactMapper {
         val name = cursor.getString(nameIndex) ?: return null
         val phoneNumber = cursor.getString(numberIndex) ?: return null
         val lastUpdatedAt = cursor.getLong(lastUpdatedAtIndex)
+        
+        val normalizedPhoneNumber = phoneNumber.stripNonDigits().uppercase()
 
         return ContactEntity(
             id = id,
             name = name.trim(),
-            phoneNumber = phoneNumber.replace(
-                "\\s".toRegex(),
-                ""
-            ), // Remove spaces from phone number
+            phoneNumber = normalizedPhoneNumber, // Normalized for matching
+            originalPhoneNumber = phoneNumber,
             updatedAtApp = lastUpdatedAt
         )
     }

@@ -17,7 +17,10 @@ data class SenderAddressEntity(
     val id: Long = 0,
 
     @ColumnInfo(name = "sender_address")
-    val senderAddress: String,
+    val senderAddress: String, // Normalized for matching with contacts
+
+    @ColumnInfo(name = "original_sender_address")
+    val originalSenderAddress: String,
 
     @ColumnInfo(name = "sender_type")
     val senderType: SenderType,
