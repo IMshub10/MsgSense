@@ -7,4 +7,6 @@ interface IOnboardingRepository {
     suspend fun isSmsProcessingCompleted(): Boolean
     fun setPhoneTableLastUpdated(timeInMillis: Long)
     fun areContactsSynced(): Boolean
+    fun getDefaultSmsPromptLastShownTime(): Long
+    fun setDefaultSmsPromptLastShownTime(timeInMillis: Long)
 }

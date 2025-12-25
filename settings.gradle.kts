@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "NotifAI"
 include(":app")
 include(":core")
+include(":baselineprofile")

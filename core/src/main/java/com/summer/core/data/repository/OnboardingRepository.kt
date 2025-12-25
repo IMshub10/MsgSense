@@ -56,4 +56,12 @@ class OnboardingRepository @Inject constructor(
     override fun areContactsSynced(): Boolean {
         return sharedPreferencesManager.getDataLong(PreferenceKey.PHONE_TABLE_LAST_UPDATED) != 0L
     }
+
+    override fun getDefaultSmsPromptLastShownTime(): Long {
+        return sharedPreferencesManager.getDataLong(PreferenceKey.DEFAULT_SMS_PROMPT_LAST_SHOWN)
+    }
+
+    override fun setDefaultSmsPromptLastShownTime(timeInMillis: Long) {
+        sharedPreferencesManager.saveData(PreferenceKey.DEFAULT_SMS_PROMPT_LAST_SHOWN, timeInMillis)
+    }
 }

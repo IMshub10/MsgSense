@@ -43,6 +43,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
+    
     override val layoutResId: Int
         get() = R.layout.frag_sms_inbox
 
@@ -72,8 +73,13 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
 
     override fun onFragmentReady(instanceState: Bundle?) {
         super.onFragmentReady(instanceState)
-        mBinding.viewModel = smsInboxViewModel
         mBinding.lifecycleOwner = viewLifecycleOwner
+        
+        // Defer ViewModel binding - Hilt injection takes ~1.3s on first load
+        // This allows the fragment to appear immediately while ViewModel loads
+        mBinding.root.post {
+            mBinding.viewModel = smsInboxViewModel
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -81,21 +87,26 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
 
         // Handle keyboard insets programmatically
         setupKeyboardInsets()
-
-        // Initialize ViewModel with navigation arguments
-        val args = SmsInboxFragArgs.fromBundle(requireArguments())
-        smsInboxViewModel.setContactInfoModel(
-            targetSmsId = if (args.targetSmsId == 0L) null else args.targetSmsId,
-            senderAddressId = args.senderAddressId,
-            smsImportanceType = SmsImportanceType.fromValue(args.smsImportanceType)
-                ?: SmsImportanceType.ALL
-        )
-
         setupToolbar()
         setupRecyclerView()
         addMenuItem()
-        observeMessages()
-        listeners()
+        
+        // Defer ALL ViewModel access - Hilt injection takes ~1.3s on first load
+        // This allows the fragment to appear immediately while ViewModel loads
+        view.post {
+            // Initialize ViewModel with navigation arguments
+            val args = SmsInboxFragArgs.fromBundle(requireArguments())
+            smsInboxViewModel.setContactInfoModel(
+                targetSmsId = if (args.targetSmsId == 0L) null else args.targetSmsId,
+                senderAddressId = args.senderAddressId,
+                smsImportanceType = SmsImportanceType.fromValue(args.smsImportanceType)
+                    ?: SmsImportanceType.ALL
+            )
+            
+            // Now set up observers that access ViewModel
+            observeMessages()
+            listeners()
+        }
     }
 
     private fun setupKeyboardInsets() {

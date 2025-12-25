@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.google.firebase.crashlytics)
     alias(libs.plugins.androidx.navigation.safe.args)
+    alias(libs.plugins.baselineprofile)
 }
 
 android {
@@ -22,9 +23,38 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        // Use debug signing for now - replace with release keystore for production
+        getByName("debug") {
+            // Uses default debug keystore
+        }
+        create("release") {
+            // TODO: Configure your release keystore
+            // storeFile = file("path/to/your/keystore.jks")
+            // storePassword = "your-store-password"
+            // keyAlias = "your-key-alias"
+            // keyPassword = "your-key-password"
+            
+            // For now, use debug keystore (remove this for production)
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
-        release {
+        debug {
+            isDebuggable = true
             isMinifyEnabled = false
+            versionNameSuffix = "-debug"
+            signingConfig = signingConfigs.getByName("debug")
+        }
+        release {
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -44,6 +74,11 @@ android {
     buildFeatures {
         dataBinding = true
     }
+}
+
+baselineProfile {
+    // Don't build on every build - generate manually
+    automaticGenerationDuringBuild = false
 }
 
 dependencies {
@@ -71,4 +106,8 @@ dependencies {
 
     //lottie
     implementation(libs.lottie)
+    
+    // Baseline Profile - improves cold start performance
+    implementation(libs.androidx.profileinstaller)
+    "baselineProfile"(project(":baselineprofile"))
 }

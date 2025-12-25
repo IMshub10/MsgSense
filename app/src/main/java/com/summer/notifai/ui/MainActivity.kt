@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.provider.Telephony
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.summer.core.android.permission.manager.IPermissionManager
@@ -33,6 +34,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     @Inject
     lateinit var permissionManager: IPermissionManager
 
+    private val mainViewModel: MainViewModel by viewModels()
+
     private val defaultSmsAppLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result: ActivityResult? ->
@@ -47,6 +50,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onActivityReady(savedInstanceState: Bundle?) {
         setupNavController()
         handleIntent(intent)
+        checkAndPromptDefaultSmsApp()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -90,6 +94,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     /**
+     * Check if conditions are met to prompt user to set this app as default SMS.
+     * Delegates logic to MainViewModel.
+     */
+    private fun checkAndPromptDefaultSmsApp() {
+        if (mainViewModel.shouldPromptForDefaultSms()) {
+            mainViewModel.onDefaultSmsPromptShown()
+            promptToSetDefaultSmsApp()
+        }
+    }
+
+    /**
      * Prompt to set this app as the default SMS app.
      * Called by fragments when needed.
      */
@@ -111,3 +126,4 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         startActivity(intent)
     }
 }
+
