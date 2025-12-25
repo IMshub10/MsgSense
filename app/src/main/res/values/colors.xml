@@ -5,6 +5,7 @@
 
     <color name="black">#1E1E1E</color>
     <color name="white">#DEDEDE</color>
+    <color name="white_70">#B3FFFFFF</color> <!-- 70% opacity white -->
 
     <color name="light_black">#2C2C2C</color>
 

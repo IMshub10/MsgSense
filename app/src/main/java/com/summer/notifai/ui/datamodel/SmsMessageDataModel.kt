@@ -9,6 +9,7 @@ data class SmsMessageDataModel(
     val dateInEpoch: Long,
     val date: String,
     val isIncoming: Boolean,
+    val status: Int?,
     val smsClassificationDataModel: SmsClassificationDataModel,
     var isSelected: Boolean = false
 ) : BaseObservable() {

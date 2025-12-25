@@ -18,45 +18,66 @@
         app:isIncoming="@{false}"
         app:selectedBackgroundTint="@{model.isSelected}">
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tv_itemSmsMessage_date"
-            style="@style/text_body"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_x_medium"
-            android:layout_marginEnd="@dimen/spacing_small"
-            android:gravity="end"
-            android:text="@{model.date}"
-            android:textColor="?colorOnPrimary"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_itemSmsMessage_message"
-            app:layout_constraintEnd_toStartOf="@+id/tv_itemSmsMessage_message"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            tools:text="12:45 AM" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tv_itemSmsMessage_message"
-            style="@style/text_body"
+        <!-- Message bubble container -->
+        <LinearLayout
+            android:id="@+id/ll_itemSmsMessage_bubble"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:autoLink="all"
             android:background="@drawable/shape_color_surface_radius_x_medium"
             android:backgroundTint="@color/primary"
-            android:linksClickable="true"
-            android:longClickable="false"
+            android:orientation="vertical"
             android:padding="@dimen/spacing_x_small"
-            android:text="@{model.message}"
-            android:textColor="@color/white"
-            android:textColorLink="@color/blue_link"
-            android:textIsSelectable="false"
-            android:textSize="14sp"
             app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Lorem ipsum" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <!-- Message text -->
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_itemSmsMessage_message"
+                style="@style/text_body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autoLink="all"
+                android:linksClickable="true"
+                android:longClickable="false"
+                android:text="@{model.message}"
+                android:textColor="@color/white"
+                android:textColorLink="@color/blue_link"
+                android:textIsSelectable="false"
+                android:textSize="14sp"
+                tools:text="Lorem ipsum dolor sit amet" />
+
+            <!-- Time and status row (bottom-right like WhatsApp) -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="@dimen/spacing_tiny"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tv_itemSmsMessage_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@{model.date}"
+                    android:textColor="@color/white_70"
+                    android:textSize="11sp"
+                    tools:text="12:45 AM" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/iv_itemSmsMessage_status"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="@dimen/spacing_tiny"
+                    app:smsStatusIcon="@{model.status}"
+                    tools:src="@drawable/ic_double_tick_24x24" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"

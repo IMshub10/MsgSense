@@ -15,6 +15,8 @@ data class SmsMessageModel(
     val date: Long,
     @ColumnInfo(name = "type")
     val type: Int,
+    @ColumnInfo(name = "status")
+    val status: Int?,
     @ColumnInfo(name = "sms_message_type")
     val smsMessageType: String?,
     @ColumnInfo(name = "compact_type")

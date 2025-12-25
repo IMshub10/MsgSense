@@ -17,6 +17,7 @@ object SmsMessageMapper {
             dateInEpoch = date,
             date = DateUtils.formatTimeOnly(date),
             isIncoming = SmsMessageType.isIncoming(type),
+            status = status,
             smsClassificationDataModel = SmsClassificationDataModel(
                 smsType = smsMessageType.orEmpty(),
                 type = SmsClassificationType.fromCompactName(compactType.orEmpty())
