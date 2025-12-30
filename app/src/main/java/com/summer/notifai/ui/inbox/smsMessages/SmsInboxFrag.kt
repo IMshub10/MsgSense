@@ -5,12 +5,8 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import androidx.core.os.bundleOf
-import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -94,7 +90,6 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                 ?: SmsImportanceType.ALL
         )
         view.post {
-            addMenuItem()
             setupRecyclerView()
             observeMessages()
             listeners()
@@ -110,8 +105,30 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
     }
 
     private fun setupToolbar() {
-        mBinding.mtFragSmsInboxToolbar.setNavigationOnClickListener {
+        mBinding.ivFragSmsInboxBack.setOnClickListener {
             findNavController().popBackStack()
+        }
+        mBinding.ivFragSmsInboxSearch.setOnClickListener {
+            val bundle = bundleOf(
+                "query" to "",
+                "searchType" to "1",
+                "senderAddressId" to smsInboxViewModel.senderAddressId.toString()
+            )
+            findNavController().navigate(R.id.action_inbox_to_search, bundle)
+        }
+        mBinding.ivFragSmsInboxBlock.setOnClickListener {
+            showYesNoDialog(
+                requireContext(),
+                getString(R.string.block),
+                getString(R.string.blocked_sender_message),
+                {
+                    progressDialog.show()
+                    smsInboxViewModel.blockSender {
+                        progressDialog.dismiss()
+                        findNavController().popBackStack()
+                    }
+                },
+                {})
         }
     }
 
@@ -122,47 +139,6 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
             appNotificationManager.clearNotificationForSender(it)
         }
         chatSessionTracker.activeSenderAddressId = smsInboxViewModel.senderAddressId
-    }
-
-    private fun addMenuItem() {
-        requireActivity().addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.menu_sms_inbox, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return when (menuItem.itemId) {
-                    R.id.action_search -> {
-                        // Navigate to search using Navigation component
-                        val bundle = bundleOf(
-                            "query" to "",
-                            "searchType" to "1",
-                            "senderAddressId" to smsInboxViewModel.senderAddressId.toString()
-                        )
-                        findNavController().navigate(R.id.action_inbox_to_search, bundle)
-                        true
-                    }
-
-                    R.id.action_block -> {
-                        showYesNoDialog(
-                            requireContext(),
-                            getString(R.string.block),
-                            getString(R.string.blocked_sender_message),
-                            {
-                                progressDialog.show()
-                                smsInboxViewModel.blockSender {
-                                    progressDialog.dismiss()
-                                    findNavController().popBackStack()
-                                }
-                            },
-                            {})
-                        true
-                    }
-
-                    else -> false
-                }
-            }
-        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     private fun listeners() {

@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:autoLink="all"
             android:background="@drawable/shape_color_surface_radius_x_medium"
-            android:backgroundTint="#075E54"
+            android:backgroundTint="@color/primary"
             android:linksClickable="true"
             android:padding="@dimen/spacing_x_small"
             android:textColor="@color/white"

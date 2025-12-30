@@ -92,7 +92,10 @@ class SearchListViewModel @Inject constructor(
                         val pagerFlow: Flow<PagingData<GlobalSearchListItem>> = when (type) {
                             SearchSectionId.MESSAGES -> {
                                 Pager(
-                                    config = PagingConfig(pageSize = SMS_LIST_PAGE_SIZE),
+                                    config = PagingConfig(
+                                        pageSize = SMS_LIST_PAGE_SIZE,
+                                        enablePlaceholders = false
+                                    ),
                                     pagingSourceFactory = {
                                         searchMessagesUseCase(
                                             query.lowercase(),
@@ -106,7 +109,10 @@ class SearchListViewModel @Inject constructor(
 
                             SearchSectionId.CONVERSATIONS -> {
                                 Pager(
-                                    config = PagingConfig(pageSize = CONTACT_LIST_PAGE_SIZE),
+                                    config = PagingConfig(
+                                        pageSize = CONTACT_LIST_PAGE_SIZE,
+                                        enablePlaceholders = false
+                                    ),
                                     pagingSourceFactory = { searchConversationsUseCase(query.lowercase()) }
                                 ).flow.map {
                                     it.map { item -> GlobalSearchListItem.ConversationItem(item.toContactMessageInfoDataModel()) }
@@ -115,7 +121,10 @@ class SearchListViewModel @Inject constructor(
 
                             SearchSectionId.CONTACTS -> {
                                 Pager(
-                                    config = PagingConfig(pageSize = CONTACT_LIST_PAGE_SIZE),
+                                    config = PagingConfig(
+                                        pageSize = CONTACT_LIST_PAGE_SIZE,
+                                        enablePlaceholders = false
+                                    ),
                                     pagingSourceFactory = { searchContactsUseCase(query.lowercase()) }
                                 ).flow.map {
                                     it.map { item -> GlobalSearchListItem.ContactItem(item.toNewContactDataModel()) }

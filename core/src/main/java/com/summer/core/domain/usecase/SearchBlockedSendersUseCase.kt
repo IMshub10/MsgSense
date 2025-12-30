@@ -13,7 +13,10 @@ class SearchBlockedSendersUseCase @Inject constructor(
 ) {
     operator fun invoke(query: String): Flow<PagingData<ContactInfoInboxModel>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = false
+            ),
             pagingSourceFactory = {
                 repository.getSearchBlockedSendersPagingSource(query.trim().lowercase())
             }

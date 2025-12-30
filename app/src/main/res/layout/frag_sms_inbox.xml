@@ -16,20 +16,90 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/mt_fragSmsInbox_toolbar"
-            style="@style/ToolbarStyle"
+        <!-- Custom Clean Header similar to SettingsFrag -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_fragSmsInbox_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:elevation="@dimen/spacing_atom"
-            app:layout_constraintTop_toTopOf="parent"
-            app:navigationIcon="@drawable/ic_back_24x24"
-            app:subtitle="@{viewModel.contactInfoModel.phoneNumber}"
-            app:subtitleTextColor="?labelSecondary"
-            app:title="@{viewModel.contactInfoModel.senderName}"
-            app:titleTextColor="?label"
-            tools:subtitle="+1 234 567 890"
-            tools:title="Contact Name" />
+            android:background="?attr/colorSurface"
+            android:elevation="@dimen/spacing_small"
+            android:paddingHorizontal="@dimen/spacing_small"
+            android:paddingVertical="@dimen/spacing_x_small"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_fragSmsInbox_back"
+                android:layout_width="@dimen/spacing_x_large"
+                android:layout_height="@dimen/spacing_x_large"
+                android:background="@drawable/ripple_color_grey_oval"
+                android:contentDescription="@string/back"
+                android:padding="@dimen/spacing_x_small"
+                android:src="@drawable/ic_back_24x24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.5" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/cl_fragSmsInbox_titleSection"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/spacing_small"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/iv_fragSmsInbox_search"
+                app:layout_constraintStart_toEndOf="@+id/iv_fragSmsInbox_back"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tv_fragSmsInbox_senderName"
+                    style="@style/text_header_bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@{viewModel.contactInfoModel.senderName}"
+                    android:textSize="20sp"
+                    app:layout_constraintBottom_toTopOf="@+id/tv_fragSmsInbox_phoneNumber"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    tools:text="Contact Name" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tv_fragSmsInbox_phoneNumber"
+                    style="@style/text_caption_secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@{viewModel.contactInfoModel.phoneNumber}"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_fragSmsInbox_senderName"
+                    tools:text="+1 234 567 890" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_fragSmsInbox_search"
+                android:layout_width="@dimen/spacing_x_large"
+                android:layout_height="@dimen/spacing_x_large"
+                android:background="@drawable/ripple_color_grey_oval"
+                android:contentDescription="@string/search_here"
+                android:padding="@dimen/spacing_x_small"
+                android:src="@drawable/ic_search_24x24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/iv_fragSmsInbox_block"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="?label" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_fragSmsInbox_block"
+                android:layout_width="@dimen/spacing_x_large"
+                android:layout_height="@dimen/spacing_x_large"
+                android:background="@drawable/ripple_color_grey_oval"
+                android:contentDescription="@string/block"
+                android:padding="@dimen/spacing_x_small"
+                android:src="@drawable/ic_block_24x24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="?label" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_sms_messages"
@@ -38,7 +108,7 @@
             android:layout_marginBottom="@dimen/spacing_x_small"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toTopOf="@+id/barrier_fragSmsInbox_bottomSection"
-            app:layout_constraintTop_toBottomOf="@id/mt_fragSmsInbox_toolbar"
+            app:layout_constraintTop_toBottomOf="@id/cl_fragSmsInbox_header"
             tools:listitem="@layout/item_received_sms_message" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -55,7 +125,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/mt_fragSmsInbox_toolbar"
+            app:layout_constraintTop_toBottomOf="@+id/cl_fragSmsInbox_header"
             tools:text="Saturday, 5th April 2025"
             tools:visibility="visible" />
 
