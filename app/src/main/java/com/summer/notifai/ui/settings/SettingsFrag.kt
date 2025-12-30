@@ -27,7 +27,7 @@ class SettingsFrag : BaseFragment<FragSettingsBinding>() {
 
     private fun initListeners() {
         mBinding.ivFragSettingsBack.setOnClickListener {
-            requireActivity().finish()
+            findNavController().popBackStack()
         }
         mBinding.tvFragSettingsItemBlockList.setOnClickListener {
             if (findNavController().currentDestination?.id == R.id.settingsFrag)

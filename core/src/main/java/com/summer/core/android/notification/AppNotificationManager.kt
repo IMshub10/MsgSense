@@ -83,8 +83,9 @@ class AppNotificationManager @Inject constructor(
 
         val notification = NotificationCompat.Builder(context, channelType.channelId)
             .setSmallIcon(R.drawable.ic_sms_sync_24x24)
-            .setContentTitle("Message from ${sms.senderName ?: sms.rawAddress}")
             .setContentText(sms.body.take(60))
+            .setContentTitle("Message from ${sms.senderName ?: sms.rawAddress}")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(sms.body))
             .setContentIntent(
                 notificationIntentProvider.provideSmsInboxPendingIntent(
                     senderAddressId = sms.senderAddressId,
@@ -96,7 +97,7 @@ class AppNotificationManager @Inject constructor(
             .build()
         Log.d(
             "NotificationDebug",
-            "Notifying for sms.androidSmsId=${sms.androidSmsId}, body=${sms.body.take(30)}"
+            "Notifying for sms.androidSmsId= ${sms.androidSmsId}, body= ${sms.body}"
         )
         notificationManager?.notify(sms.androidSmsId, notification)
     }

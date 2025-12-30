@@ -34,10 +34,10 @@ import com.summer.notifai.ui.MainActivity
 import com.summer.notifai.ui.datamodel.SmsInboxListItem
 import com.summer.notifai.ui.inbox.SmsInboxViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -60,6 +60,8 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
 
     private val scrollHandler = Handler(Looper.getMainLooper())
     private var scrollHideRunnable: Runnable? = null
+    private val dayLabelCache = mutableMapOf<Long, String>()
+    private var lastFloatingDateLabel: String? = null
 
     private val progressDialog by lazy {
         ProgressDialog(requireContext()).apply {
@@ -74,12 +76,7 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
     override fun onFragmentReady(instanceState: Bundle?) {
         super.onFragmentReady(instanceState)
         mBinding.lifecycleOwner = viewLifecycleOwner
-        
-        // Defer ViewModel binding - Hilt injection takes ~1.3s on first load
-        // This allows the fragment to appear immediately while ViewModel loads
-        mBinding.root.post {
-            mBinding.viewModel = smsInboxViewModel
-        }
+        mBinding.viewModel = smsInboxViewModel
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -88,22 +85,17 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
         // Handle keyboard insets programmatically
         setupKeyboardInsets()
         setupToolbar()
-        setupRecyclerView()
-        addMenuItem()
-        
-        // Defer ALL ViewModel access - Hilt injection takes ~1.3s on first load
-        // This allows the fragment to appear immediately while ViewModel loads
+
+        val args = SmsInboxFragArgs.fromBundle(requireArguments())
+        smsInboxViewModel.setContactInfoModel(
+            targetSmsId = if (args.targetSmsId == 0L) null else args.targetSmsId,
+            senderAddressId = args.senderAddressId,
+            smsImportanceType = SmsImportanceType.fromValue(args.smsImportanceType)
+                ?: SmsImportanceType.ALL
+        )
         view.post {
-            // Initialize ViewModel with navigation arguments
-            val args = SmsInboxFragArgs.fromBundle(requireArguments())
-            smsInboxViewModel.setContactInfoModel(
-                targetSmsId = if (args.targetSmsId == 0L) null else args.targetSmsId,
-                senderAddressId = args.senderAddressId,
-                smsImportanceType = SmsImportanceType.fromValue(args.smsImportanceType)
-                    ?: SmsImportanceType.ALL
-            )
-            
-            // Now set up observers that access ViewModel
+            addMenuItem()
+            setupRecyclerView()
             observeMessages()
             listeners()
         }
@@ -160,7 +152,7 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                                 progressDialog.show()
                                 smsInboxViewModel.blockSender {
                                     progressDialog.dismiss()
-                                    requireActivity().finish()
+                                    findNavController().popBackStack()
                                 }
                             },
                             {})
@@ -282,10 +274,15 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                 if (topPos != RecyclerView.NO_POSITION) {
                     val item = smsInboxAdapter.currentList.getOrNull(topPos) ?: return
                     val label = when (item) {
-                        is SmsInboxListItem.Message -> DateUtils.formatDayHeader(item.data.dateInEpoch)
+                        is SmsInboxListItem.Message -> dayLabelCache.getOrPut(item.data.dateInEpoch) {
+                            DateUtils.formatDayHeader(item.data.dateInEpoch)
+                        }
                         is SmsInboxListItem.Header -> item.header.label
                     }
-                    showFloatingDateLabel(label)
+                    if (label != lastFloatingDateLabel) {
+                        showFloatingDateLabel(label)
+                        lastFloatingDateLabel = label
+                    }
                 }
             }
 
@@ -311,31 +308,21 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeMessages() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                smsInboxViewModel.messageLoader.collectLatest { loader ->
-                    loader?.messages?.collectLatest { list ->
+                smsInboxViewModel.messageLoader
+                    .filterNotNull()
+                    .flatMapLatest { it.messages }
+                    .collectLatest { list ->
                         smsInboxAdapter.submitList(list) {
                             if (list.isNotEmpty()) {
                                 scrollToTargetIfPresent(smsInboxViewModel.targetSmsId)
                             }
                         }
                     }
-                }
             }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            smsInboxViewModel.messageLoader
-                .filterNotNull()
-                .distinctUntilChanged()
-                .take(1) // only once
-                .collect { loader ->
-                    loader.attachScrollListener(
-                        mBinding.rvSmsMessages,
-                        mBinding.rvSmsMessages.layoutManager as LinearLayoutManager
-                    )
-                }
         }
     }
 
@@ -380,6 +367,8 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
 
     override fun onDestroyView() {
         scrollHideRunnable?.let { scrollHandler.removeCallbacks(it) }
+        dayLabelCache.clear()
+        lastFloatingDateLabel = null
         _smsInboxAdapter = null
         super.onDestroyView()
     }

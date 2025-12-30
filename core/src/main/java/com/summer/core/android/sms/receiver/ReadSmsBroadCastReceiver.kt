@@ -29,17 +29,19 @@ class ReadSmsBroadcastReceiver : BroadcastReceiver() {
             val permissionManager: IPermissionManager = entryPoint.permissionManager()
             val appNotificationManager = entryPoint.appNotificationManager()
             val isSenderBlockedUseCase = entryPoint.isSenderBlockedUseCase()
-            goAsync()
+            val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
-                val sms = smsInserter.processIncomingSms(appContext, intent)
-
-                if (sms != null && permissionManager.hasSendNotifications()) {
-                    val isBlocked = isSenderBlockedUseCase(sms.senderAddressId)
-                    if (!isBlocked) {
-                        appNotificationManager.showNotificationForSms(sms = sms)
-                    } else {
-                        Log.d("SMSBroadCastReceiver", "Notification blocked: sender is blocked")
+                try {
+                    val sms = smsInserter.processIncomingSms(appContext, intent)
+                    if (sms != null && permissionManager.hasSendNotifications()) {
+                        val isBlocked = isSenderBlockedUseCase(sms.senderAddressId)
+                        if (!isBlocked) appNotificationManager.showNotificationForSms(sms = sms)
+                        else Log.d("SMSBroadCastReceiver", "Notification blocked: sender is blocked")
                     }
+                } catch (e : Exception) {
+                    Log.e("SMSBroadCastReceiver", "Error processing incoming SMS", e)
+                } finally {
+                    pendingResult.finish()
                 }
             }
         }

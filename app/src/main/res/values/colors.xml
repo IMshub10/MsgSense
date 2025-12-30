@@ -3,62 +3,60 @@
     <color name="black_hole">#000000</color>
     <color name="white_hole">#ffffff</color>
 
-    <color name="black">#1E1E1E</color>
-    <color name="white">#DEDEDE</color>
-    <color name="white_70">#B3FFFFFF</color> <!-- 70% opacity white -->
+    <color name="black">#121212</color>
+    <color name="white">#FAFAFA</color>
+    <color name="white_70">#B3FFFFFF</color>
 
-    <color name="light_black">#2C2C2C</color>
+    <color name="light_black">#212121</color>
 
-    <color name="blue_link">#36a6ff</color>
+    <color name="blue_link">#409CFF</color>
+    <color name="primary">#2A6F97</color>
+    <color name="primaryLight">#C2EBF0</color>
+    <color name="primaryDark">#1A3C5A</color>
+    <color name="brand_accent">#6C63FF</color>
 
-    <color name="primary">#FF557C9B</color>        <!-- dark teal -->
-    <color name="primaryLight">#B2DFDB</color>   <!-- Soft teal background -->
-    <color name="primaryDark">#FF314C77</color>    <!-- Deeper teal for contrast -->
+    <color name="blue_grey_dark">#37474F</color>
+    <color name="blue_grey_light">#CFD8DC</color>
 
-    <color name="blue_grey_dark">#455a64</color>
-    <color name="blue_grey_light">#b0bec5</color>
+    <color name="orange_dark">#F57C00</color>
+    <color name="orange_light">#FFE0B2</color>
 
-    <color name="orange_dark">#ff9f0a</color>
-    <color name="orange_light">#ff9500</color>
+    <color name="green_dark">#2E7D32</color>
+    <color name="green_light">#E8F5E9</color>
 
-    <color name="green_dark">#30d158</color>
-    <color name="green_light">#34c759</color>
+    <color name="red_dark">#D32F2F</color>
+    <color name="red_light">#FFEBEE</color>
+    <color name="error">#E53935</color>
+    <color name="error_light">#FFCDD2</color>
 
-    <color name="red_dark">#ff453a</color>
-    <color name="red_light">#ff3b30</color>
-    <color name="error">#F27474</color>
-    <color name="error_light">#FFEDED</color>
-
-    <color name="grey_darkest">#2c2c2e</color>
-    <color name="grey_darker">#3a3a3c</color>
-    <color name="grey_dark">#48484a</color>
-    <color name="grey">#8e8e93</color>
-    <color name="grey_light">#c7c7cc</color>
-    <color name="grey_lighter">#d1d1d5</color>
-    <color name="grey_lightest">#e5e5ea</color>
+    <color name="grey_darkest">#1C1C1E</color>
+    <color name="grey_darker">#2C2C2E</color>
+    <color name="grey_dark">#3A3A3C</color>
+    <color name="grey">#8E8E93</color>
+    <color name="grey_light">#C7C7CC</color>
+    <color name="grey_lighter">#E5E5EA</color>
+    <color name="grey_lightest">#F2F2F7</color>
 
     <color name="transparent">#00000000</color>
-    <color name="translucent_0.3">#4D2c2c2e</color>
-    <color name="translucent_0.6">#992c2c2e</color>
+    <color name="translucent_0.3">#4D1C1C1E</color>
+    <color name="translucent_0.6">#991C1C1E</color>
 
-    <color name="opaque_0.3">#4debebf5</color>
-    <color name="opaque_0.6">#99ebebf5</color>
+    <color name="opaque_0.3">#4DF2F2F7</color>
+    <color name="opaque_0.6">#99F2F2F7</color>
 
-    <color name="separator_light">#1f000000</color>
-    <color name="separator_dark">#1fffffff</color>
+    <color name="separator_light">#1F000000</color>
+    <color name="separator_dark">#1FFFFFFF</color>
 
-    <color name="background_light">#FFF4FCFF</color>
-    <color name="background_dark">#2c2c2e</color>
+    <color name="background_light">#F5FBFF</color>
+    <color name="background_dark">#15171B</color>
 
-    <color name="circle_background_light">#FFCCE8FF</color> <!-- soft sky blue -->
-    <color name="circle_background_dark">#FF3D80F9</color> <!-- vibrant but not harsh blue -->
+    <color name="circle_background_light">#E3F2FD</color>
+    <color name="circle_background_dark">#4A90E2</color>
+    <color name="charcoal">#333333</color>
 
-    <color name="charcoal">#FF333333</color>
-
-    <color name="colorSelectedMessageLight">#FF557C9B</color>
-    <color name="colorSelectedMessageDark">#FF314C77</color>
-    <color name="colorSelectedMessageOverlayLight">#26557C9B</color> <!-- ~15% opacity -->
-    <color name="colorSelectedMessageOverlayDark">#26314C77</color> <!-- ~15% opacity -->
-
-    <color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#48484a</color>
+    <color name="colorSelectedMessageLight">#2A6F97</color>
+    <color name="colorSelectedMessageDark">#1A3C5A</color>
+    <color name="colorSelectedMessageOverlayLight">#262A6F97</color>
+    <color name="colorSelectedMessageOverlayDark">#261A3C5A</color>
+    <color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#8E8E93</color>
 </resources>

@@ -88,7 +88,11 @@ class SmsInboxViewModel @Inject constructor(
             items.filterIsInstance<SmsInboxListItem.Message>()
                 .map { it.data }
                 .filter { selectedIds.contains(it.id) }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val messageSelectedCount: LiveData<Int> = selectedMessages
         .map { it.size }
