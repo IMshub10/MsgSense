@@ -22,7 +22,8 @@
         <item name="colorSecondaryVariant">@color/blue_grey_light</item>
         <item name="colorOnSecondary">@color/grey_darkest</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">false</item>
         <!-- Customize your theme here. -->
         <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:colorEdgeEffect">@color/transparent</item>

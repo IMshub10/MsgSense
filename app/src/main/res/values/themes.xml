@@ -18,7 +18,8 @@
         <item name="colorSecondaryVariant">@color/blue_grey_light</item>
         <item name="colorOnSecondary">@color/background_light</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
         <!-- Customize your theme here. -->
         <item name="android:textColorLink">@color/blue_link</item>
         <item name="colorLink">@color/blue_link</item>
