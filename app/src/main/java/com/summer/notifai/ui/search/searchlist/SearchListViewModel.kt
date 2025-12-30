@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import androidx.paging.map
 import com.summer.core.android.sms.constants.Constants.CONTACT_LIST_PAGE_SIZE
 import com.summer.core.android.sms.constants.Constants.SMS_LIST_PAGE_SIZE

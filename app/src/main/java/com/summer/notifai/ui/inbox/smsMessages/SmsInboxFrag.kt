@@ -343,6 +343,7 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
 
     override fun onDestroyView() {
         scrollHideRunnable?.let { scrollHandler.removeCallbacks(it) }
+        smsInboxViewModel.cancelFlash()
         dayLabelCache.clear()
         lastFloatingDateLabel = null
         _smsInboxAdapter = null

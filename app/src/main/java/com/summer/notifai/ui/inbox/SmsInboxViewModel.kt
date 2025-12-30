@@ -115,12 +115,29 @@ class SmsInboxViewModel @Inject constructor(
     private val _highlightedMessageId = MutableStateFlow<Long?>(null)
     val highlightedMessageId: StateFlow<Long?> = _highlightedMessageId
 
+    private val flashHandler = Handler(Looper.getMainLooper())
+    private var flashResetRunnable: Runnable? = null
+
     fun flashMessage(id: Long, resetCallback: () -> Unit) {
+        // Cancel any pending reset from previous flash
+        cancelFlash()
+        
         _highlightedMessageId.value = id
-        Handler(Looper.getMainLooper()).postDelayed({
+        flashResetRunnable = Runnable {
             _highlightedMessageId.value = null
             resetCallback()
-        }, 800L)
+        }
+        flashHandler.postDelayed(flashResetRunnable!!, 1500L)
+    }
+
+    fun cancelFlash() {
+        flashResetRunnable?.let { flashHandler.removeCallbacks(it) }
+        flashResetRunnable = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        cancelFlash()
     }
 
     fun setContactInfoModel(

@@ -1,10 +1,14 @@
 package com.summer.notifai.ui.inbox.smsMessages
 
+import android.animation.ObjectAnimator
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.summer.core.android.sms.constants.Constants.SMS_HIGHLIGHT_ANIMATION
 import com.summer.notifai.R
 import com.summer.notifai.databinding.ItemReceivedSmsMessageBinding
 import com.summer.notifai.databinding.ItemSentSmsMessageBinding
@@ -89,15 +93,25 @@ class SmsInboxAdapter(
         }
     }
 
+    private fun bindHighlight(view: android.view.View, isHighlighted: Boolean) {
+        if (isHighlighted) {
+            val colorFrom = ContextCompat.getColor(view.context, R.color.orange_light)
+            val colorTo = Color.TRANSPARENT
+            ObjectAnimator.ofArgb(view, "backgroundColor", colorFrom, colorTo).apply {
+                duration = SMS_HIGHLIGHT_ANIMATION
+                start()
+            }
+        } else {
+            view.setBackgroundColor(Color.TRANSPARENT)
+        }
+    }
+
     inner class ReceivedMessageViewHolder(
         private val binding: ItemReceivedSmsMessageBinding
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SmsInboxListItem.Message) {
             binding.model = item.data
-            val highlight = highlightedIdFlow.value == item.data.id
-            binding.root.setBackgroundResource(
-                if (highlight) R.color.primary else 0
-            )
+            bindHighlight(binding.root, highlightedIdFlow.value == item.data.id)
             binding.root.setOnClickListener { onItemClick(item) }
             binding.root.setOnLongClickListener {
                 onLongItemClick(item)
@@ -117,10 +131,7 @@ class SmsInboxAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SmsInboxListItem.Message) {
             binding.model = item.data
-            val highlight = highlightedIdFlow.value == item.data.id
-            binding.root.setBackgroundResource(
-                if (highlight) R.color.primary else 0
-            )
+            bindHighlight(binding.root, highlightedIdFlow.value == item.data.id)
             binding.root.setOnClickListener { onItemClick(item) }
             binding.root.setOnLongClickListener {
                 onLongItemClick(item)

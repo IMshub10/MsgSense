@@ -43,4 +43,6 @@ object Constants {
      * Used to manage the lifecycle of SMS processing jobs.
      */
     const val SMS_PROCESSING_WORK_NAME = "sms_processing_work"
+
+    const val SMS_HIGHLIGHT_ANIMATION = 1500L
 }
