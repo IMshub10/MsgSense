@@ -114,7 +114,7 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                 "searchType" to "1",
                 "senderAddressId" to smsInboxViewModel.senderAddressId.toString()
             )
-            findNavController().navigate(R.id.action_inbox_to_search, bundle)
+            findNavController().navigate(R.id.action_inbox_to_search_list, bundle)
         }
         mBinding.ivFragSmsInboxBlock.setOnClickListener {
             showYesNoDialog(

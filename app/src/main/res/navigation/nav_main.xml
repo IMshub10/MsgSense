@@ -101,10 +101,37 @@
         <action
             android:id="@+id/action_inbox_to_search"
             app:destination="@id/nav_search" />
+
+        <action
+            android:id="@+id/action_inbox_to_search_list"
+            app:destination="@id/searchListFragDirect" />
     </fragment>
 
     <!-- Search Nested Graph -->
     <include app:graph="@navigation/nav_search" />
+
+    <!-- Search List Fragment (direct access from inbox for conversation-specific search) -->
+    <fragment
+        android:id="@+id/searchListFragDirect"
+        android:name="com.summer.notifai.ui.search.searchlist.SearchListFrag"
+        android:label="SearchListFrag"
+        tools:layout="@layout/frag_search_list">
+
+        <argument
+            android:name="query"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="searchType"
+            app:argType="string"
+            android:defaultValue="1" />
+
+        <argument
+            android:name="senderAddressId"
+            app:argType="string"
+            android:defaultValue="0" />
+    </fragment>
 
     <!-- Settings Nested Graph -->
     <include app:graph="@navigation/nav_settings" />
