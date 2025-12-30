@@ -2,6 +2,19 @@ package com.summer.core.util
 
 import com.summer.core.data.local.entities.SenderType
 
+private val PHONE_NUMBER_REGEX = Regex("^\\+?[0-9]{6,15}$")
+
+/**
+ * Checks if the string is a valid phone number format.
+ * A valid phone number:
+ * - Optionally starts with '+'
+ * - Contains only digits (6-15 characters)
+ */
+fun String?.isValidPhoneNumber(): Boolean {
+    if (this.isNullOrBlank()) return false
+    return this.trim().matches(PHONE_NUMBER_REGEX)
+}
+
 fun String.determineSenderType(): SenderType {
     return when {
         matches(Regex("^\\+?[0-9]{8,15}$")) -> SenderType.CONTACT

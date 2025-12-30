@@ -15,6 +15,7 @@ import com.summer.core.android.sms.constants.Constants.SEARCH_NEW_CONTACT_ID
 import com.summer.core.domain.repository.ISmsRepository
 import com.summer.core.domain.usecase.GetContactListWithFilterUseCase
 import com.summer.core.util.CountryCodeProvider
+import com.summer.core.util.isValidPhoneNumber
 import com.summer.notifai.ui.datamodel.NewContactDataModel
 import com.summer.notifai.ui.datamodel.mapper.NewContactMapper.toNewContactDataModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,9 +50,7 @@ class NewContactListViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, PagingData.empty())
 
     private fun getPagedSmsContacts(query: String): Flow<PagingData<NewContactDataModel>> {
-        val isPhoneNumber = query.trim().matches(Regex("^\\+?[0-9]{6,15}$"))
-
-        val staticItem = if (isPhoneNumber) {
+        val staticItem = if (query.isValidPhoneNumber()) {
             NewContactDataModel(
                 id = SEARCH_NEW_CONTACT_ID.toLong(),
                 contactName = "Send to this phone number",

@@ -22,6 +22,7 @@ import com.summer.core.domain.usecase.GetContactInfoInboxModelUseCase
 import com.summer.core.domain.usecase.MarkSmsAsReadForSenderUseCase
 import com.summer.core.domain.usecase.SendSmsUseCase
 import com.summer.core.ui.model.SmsImportanceType
+import com.summer.core.util.isValidPhoneNumber
 import com.summer.notifai.ui.datamodel.SmsInboxListItem
 import com.summer.notifai.ui.datamodel.SmsMessageDataModel
 import com.summer.notifai.ui.inbox.smsMessages.SmsMessageLoader
@@ -178,7 +179,11 @@ class SmsInboxViewModel @Inject constructor(
         if (body.isNullOrBlank()) return
         val contact = _contactInfoModel.value
 
-        if (contact == null || contact.phoneNumber.isNullOrEmpty()) {
+        // Try phoneNumber first, then check if senderName is a valid phone number
+        val phoneNumber = contact?.phoneNumber?.takeIf { it.isNotEmpty() }
+            ?: contact?.senderName?.takeIf { it.isValidPhoneNumber() }
+
+        if (contact == null || phoneNumber.isNullOrEmpty()) {
             Log.e("SmsInbox", "No phone number found for senderAddressId=$senderAddressId")
             return
         }
@@ -187,11 +192,11 @@ class SmsInboxViewModel @Inject constructor(
             sendSmsUseCase.invoke(
                 context,
                 contact.senderAddressId,
-                contact.phoneNumber.orEmpty(),
+                phoneNumber,
                 body
             )
-        }
     }
+}
 
     fun markSmsListAsRead(
         context: Context,
