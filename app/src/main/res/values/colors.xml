@@ -39,16 +39,23 @@
     <color name="grey_lightest">#F2F2F7</color>
 
     <color name="transparent">#00000000</color>
-    <color name="translucent_0.3">#4D121624</color> <color name="translucent_0.6">#99121624</color> <color name="opaque_0.3">#4DF2F2F7</color>
+    <color name="translucent_0.3">#4D121624</color>
+    <color name="translucent_0.6">#99121624</color>
+    <color name="opaque_0.3">#4DF2F2F7</color>
     <color name="opaque_0.6">#99F2F2F7</color>
 
     <color name="separator_light">#1F000000</color>
     <color name="separator_dark">#1FFFFFFF</color>
 
-    <color name="background_light">#F5F8FF</color> <color name="background_dark">#0F111A</color> <color name="circle_background_light">#E3E9FC</color> <color name="circle_background_dark">#3A63DE</color> <color name="charcoal">#333333</color>
+    <color name="background_light">#F5F8FF</color>
+    <color name="background_dark">#2B364A</color>
+    <color name="circle_background_light">#E3E9FC</color>
+    <color name="circle_background_dark">#3A63DE</color>
+    <color name="charcoal">#333333</color>
 
     <color name="colorSelectedMessageLight">#3A63DE</color>
-    <color name="colorSelectedMessageDark">#1A2B5E</color> <color name="colorSelectedMessageOverlayLight">#263A63DE</color>
+    <color name="colorSelectedMessageDark">#1A2B5E</color>
+    <color name="colorSelectedMessageOverlayLight">#263A63DE</color>
     <color name="colorSelectedMessageOverlayDark">#263A63DE</color>
 
     <color name="mtrl_textinput_default_box_stroke_color" tools:override="true">#8E8E93</color>

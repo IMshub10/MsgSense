@@ -9,14 +9,17 @@ import android.provider.Telephony
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.summer.core.android.permission.manager.IPermissionManager
+import com.summer.core.di.PrewarmManager
 import com.summer.core.ui.BaseActivity
 import com.summer.core.util.showShortToast
 import com.summer.notifai.R
 import com.summer.notifai.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -33,6 +36,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     @Inject
     lateinit var permissionManager: IPermissionManager
+    
+    @Inject
+    lateinit var prewarmManager: PrewarmManager
 
     private val mainViewModel: MainViewModel by viewModels()
 
@@ -51,6 +57,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         setupNavController()
         handleIntent(intent)
         checkAndPromptDefaultSmsApp()
+        
+        // Prewarm SMS inbox dependencies in background
+        lifecycleScope.launch { prewarmManager.prewarm() }
     }
 
     override fun onNewIntent(intent: Intent) {
