@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.databinding.BindingAdapter
@@ -16,7 +15,6 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.summer.core.R
 import com.summer.core.data.local.entities.SenderType
-import com.summer.core.data.local.entities.SmsClassificationTypeEntity
 import com.summer.core.ui.model.SmsClassificationType
 
 object DataBindingAdapters {
@@ -167,19 +165,4 @@ object DataBindingAdapters {
         }
     }
 
-    @JvmStatic
-    @BindingAdapter(value = ["toggleEntity", "onToggleChanged"], requireAll = true)
-    fun SwitchCompat.setToggleListener(
-        entity: SmsClassificationTypeEntity?,
-        listener: ((SmsClassificationTypeEntity, Boolean) -> Unit)?
-    ) {
-        setOnCheckedChangeListener(null) // prevent triggering old listeners
-
-        if (entity != null && listener != null) {
-            isChecked = entity.isImportant
-            setOnCheckedChangeListener { _, isChecked ->
-                listener.invoke(entity, isChecked)
-            }
-        }
-    }
 }

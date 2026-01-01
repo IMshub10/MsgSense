@@ -7,10 +7,6 @@
         <variable
             name="model"
             type="com.summer.core.data.local.entities.SmsClassificationTypeEntity" />
-
-        <variable
-            name="onToggleChanged"
-            type="kotlin.jvm.functions.Function2&lt;com.summer.core.data.local.entities.SmsClassificationTypeEntity, java.lang.Boolean, kotlin.Unit>" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -36,11 +32,8 @@
             android:id="@+id/switchImportant"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="@{model.isImportant}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:onToggleChanged="@{onToggleChanged}"
-            app:toggleEntity="@{model}" />
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

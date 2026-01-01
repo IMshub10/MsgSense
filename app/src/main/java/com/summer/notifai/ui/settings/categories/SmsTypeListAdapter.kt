@@ -47,7 +47,13 @@ class SmsTypeListAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(entity: SmsClassificationTypeEntity) {
             binding.model = entity
-            binding.onToggleChanged = onToggleChanged
+            
+            binding.switchImportant.setOnCheckedChangeListener(null)
+            binding.switchImportant.isChecked = entity.isImportant
+            binding.switchImportant.setOnCheckedChangeListener { _, isChecked ->
+                onToggleChanged(entity, isChecked)
+            }
+            
             binding.executePendingBindings()
         }
     }
