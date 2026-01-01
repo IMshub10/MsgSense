@@ -232,7 +232,9 @@ class SmsInboxViewModel @Inject constructor(
     fun blockSender(callback: () -> Unit) {
         viewModelScope.launch(Dispatchers.Default) {
             blockSenderUseCase.invoke(senderAddressId)
-            callback()
+            withContext(Dispatchers.Main) {
+                callback()
+            }
         }
     }
 }

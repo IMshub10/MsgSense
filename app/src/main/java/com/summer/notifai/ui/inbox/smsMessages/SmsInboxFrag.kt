@@ -125,7 +125,9 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                     progressDialog.show()
                     smsInboxViewModel.blockSender {
                         progressDialog.dismiss()
-                        findNavController().popBackStack()
+                        if (isAdded && view != null) {
+                            findNavController().popBackStack()
+                        }
                     }
                 },
                 {})
