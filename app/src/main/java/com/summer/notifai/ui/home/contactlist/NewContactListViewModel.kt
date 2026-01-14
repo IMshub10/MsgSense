@@ -49,6 +49,7 @@ class NewContactListViewModel @Inject constructor(
         .flatMapLatest { query -> getPagedSmsContacts(query.lowercase()) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, PagingData.empty())
 
+    @OptIn(FlowPreview::class)
     private fun getPagedSmsContacts(query: String): Flow<PagingData<NewContactDataModel>> {
         val staticItem = if (query.isValidPhoneNumber()) {
             NewContactDataModel(
@@ -71,7 +72,7 @@ class NewContactListViewModel @Inject constructor(
             }
         } else {
             pagingSource
-        }.cachedIn(viewModelScope)
+        }.debounce(300).cachedIn(viewModelScope)
     }
 
     suspend fun getOrInsertSenderId(selectedItem: NewContactDataModel): Long {

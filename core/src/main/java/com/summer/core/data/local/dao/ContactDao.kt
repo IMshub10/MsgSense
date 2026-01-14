@@ -52,7 +52,6 @@ interface ContactDao {
 )
 LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
 LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
-GROUP BY s.id
 ORDER BY s.date DESC
 """
     )
@@ -84,7 +83,7 @@ INNER JOIN sms_messages s ON s.id = (
 LEFT JOIN contacts c1 ON c1.phone_number = sa.sender_address
 LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
 WHERE lower(COALESCE(c1.name, c2.name, sa.original_sender_address)) LIKE '%' || :query || '%'
-GROUP BY s.id
+    AND sa.is_blocked = 0
 ORDER BY s.date DESC
 LIMIT :limit
     """
@@ -118,7 +117,6 @@ LIMIT :limit
     LEFT JOIN contacts c2 ON c2.original_phone_number = sa.original_sender_address
     WHERE lower(COALESCE(c1.name, c2.name, sa.original_sender_address)) LIKE '%' || :query || '%'
         AND sa.is_blocked = 0
-    GROUP BY s.id
     ORDER BY s.date DESC
     """
     )

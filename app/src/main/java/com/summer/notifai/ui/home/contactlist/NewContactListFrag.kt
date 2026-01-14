@@ -78,7 +78,6 @@ class NewContactListFrag : BaseFragment<FragNewContactListBinding>() {
                 }
             }
         }
-
         mBinding.rvFragNewContactListList.adapter =
             contactListPagingAdapter.withLoadStateHeaderAndFooter(
                 header = PagingLoadStateAdapter { contactListPagingAdapter.retry() },
