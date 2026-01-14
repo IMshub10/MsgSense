@@ -7,8 +7,8 @@ import java.util.*
 object DateUtils {
 
     private const val FORMAT_TIME_12_HOUR = "hh:mm a"
-    private const val FORMAT_DAY_MONTH = "dd MMMM"
-    private const val FORMAT_FULL_DATE = "dd MMMM, yy"
+    private const val FORMAT_DAY_MONTH = "dd MMM"
+    private const val FORMAT_FULL_DATE = "dd MMM, yy"
     private const val FORMAT_DAY_HEADER_SAME_YEAR = "EEEE, d MMMM"
     private const val FORMAT_DAY_HEADER_DIFF_YEAR = "EEEE, d MMMM yyyy"
 

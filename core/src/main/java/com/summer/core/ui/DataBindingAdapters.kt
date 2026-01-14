@@ -165,4 +165,18 @@ object DataBindingAdapters {
         }
     }
 
+    /**
+     * Formats SMS type for display:
+     * "BANKING_TRANSACTION" → "Banking transaction"
+     */
+    @JvmStatic
+    @BindingAdapter("formattedSmsType")
+    fun AppCompatTextView.setFormattedSmsType(smsType: String?) {
+        text = smsType
+            ?.replace("_", " ")
+            ?.lowercase()
+            ?.replaceFirstChar { it.uppercase() }
+            ?: ""
+    }
+
 }

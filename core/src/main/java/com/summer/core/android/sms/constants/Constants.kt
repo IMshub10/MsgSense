@@ -5,6 +5,8 @@ package com.summer.core.android.sms.constants
  */
 object Constants {
 
+    const val DEFAULT_REGION = "IN"
+
     /**
      * Batch size for processing SMS messages from the device in chunks.
      */

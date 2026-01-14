@@ -13,6 +13,8 @@ class CountryCodeProvider @Inject constructor(@ApplicationContext context: Conte
 
     private val countryCode: Int = getUserDialingCode(context)
 
+    val defaultIso: String = getDeviceIso(context)
+
     private fun getUserDialingCode(context: Context): Int {
         val telephonyManager =
             context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -27,5 +29,13 @@ class CountryCodeProvider @Inject constructor(@ApplicationContext context: Conte
 
     fun getMyCountryCode(): Int {
         return countryCode
+    }
+
+    private fun getDeviceIso(context: Context): String {
+        val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+
+        return telephonyManager.simCountryIso?.uppercase(Locale.ROOT)
+            ?: telephonyManager.networkCountryIso?.uppercase(Locale.ROOT)
+            ?: "IN"
     }
 }

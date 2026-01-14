@@ -31,7 +31,7 @@ fun String.trimSenderId(): String {
  * Strips all non-digit characters from a phone number, keeping only the leading '+' if present.
  */
 fun String.stripNonDigits(): String {
-    val hasPlus = startsWith("+")
+    val hasPlus = this.contains("+")
     val digitsOnly = replace(Regex("[^0-9]"), "")
     return if (hasPlus) "+$digitsOnly" else digitsOnly
 }
