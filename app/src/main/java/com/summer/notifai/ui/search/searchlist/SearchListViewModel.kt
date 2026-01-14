@@ -20,22 +20,19 @@ import com.summer.notifai.ui.datamodel.mapper.ContactInfoMapper.toContactMessage
 import com.summer.notifai.ui.datamodel.mapper.NewContactMapper.toNewContactDataModel
 import com.summer.notifai.ui.datamodel.mapper.SearchSmsMessageMapper.toSearchSmsMessageDataModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -59,13 +56,6 @@ class SearchListViewModel @Inject constructor(
 
     private val _searchType = MutableStateFlow(SearchSectionId.MESSAGES)
 
-    private val _pagingData = MutableStateFlow<PagingData<GlobalSearchListItem>>(PagingData.empty())
-    val pagingData: StateFlow<PagingData<GlobalSearchListItem>> = _pagingData.asStateFlow()
-
-    init {
-        observeSearch()
-    }
-
     fun initializeSearchInput(senderAddressId: Long, searchFilter: String, searchType: SearchSectionId) {
         setSearchType(searchType)
         this.senderAddressId = senderAddressId
@@ -80,63 +70,59 @@ class SearchListViewModel @Inject constructor(
         _searchType.value = type
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun observeSearch() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _selectedQuery
-                .combine(_searchType) { query, type -> query.trim() to type }
-                .flatMapLatest { (query, type) ->
-                    if (query.isBlank()) {
-                        // emit empty paging data directly
-                        flowOf(PagingData.empty())
-                    } else {
-                        val pagerFlow: Flow<PagingData<GlobalSearchListItem>> = when (type) {
-                            SearchSectionId.MESSAGES -> {
-                                Pager(
-                                    config = PagingConfig(
-                                        pageSize = SMS_LIST_PAGE_SIZE,
-                                        enablePlaceholders = false
-                                    ),
-                                    pagingSourceFactory = {
-                                        searchMessagesUseCase(
-                                            query.lowercase(),
-                                            senderAddressId
-                                        )
-                                    }
-                                ).flow.map {
-                                    it.map { item -> GlobalSearchListItem.SmsItem(item.toSearchSmsMessageDataModel()) }
-                                }
-                            }
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    val pagingData: Flow<PagingData<GlobalSearchListItem>> = _selectedQuery
+        .combine(_searchType) { query, type -> query.trim() to type }
+        .flatMapLatest { (query, type) ->
+            getPagingFlow(query, type)
+        }
+        .cachedIn(viewModelScope)
 
-                            SearchSectionId.CONVERSATIONS -> {
-                                Pager(
-                                    config = PagingConfig(
-                                        pageSize = CONTACT_LIST_PAGE_SIZE,
-                                        enablePlaceholders = false
-                                    ),
-                                    pagingSourceFactory = { searchConversationsUseCase(query.lowercase()) }
-                                ).flow.map {
-                                    it.map { item -> GlobalSearchListItem.ConversationItem(item.toContactMessageInfoDataModel()) }
-                                }
-                            }
-
-                            SearchSectionId.CONTACTS -> {
-                                Pager(
-                                    config = PagingConfig(
-                                        pageSize = CONTACT_LIST_PAGE_SIZE,
-                                        enablePlaceholders = false
-                                    ),
-                                    pagingSourceFactory = { searchContactsUseCase(query.lowercase()) }
-                                ).flow.map {
-                                    it.map { item -> GlobalSearchListItem.ContactItem(item.toNewContactDataModel()) }
-                                }
-                            }
-                        }
-
-                        pagerFlow
+    private fun getPagingFlow(query: String, type: SearchSectionId): Flow<PagingData<GlobalSearchListItem>> {
+        if (query.isBlank()) {
+            return flowOf(PagingData.empty())
+        }
+        return when (type) {
+            SearchSectionId.MESSAGES -> {
+                Pager(
+                    config = PagingConfig(
+                        pageSize = SMS_LIST_PAGE_SIZE,
+                        enablePlaceholders = false
+                    ),
+                    pagingSourceFactory = {
+                        searchMessagesUseCase(
+                            query.lowercase(),
+                            senderAddressId
+                        )
                     }
+                ).flow.map {
+                    it.map { item -> GlobalSearchListItem.SmsItem(item.toSearchSmsMessageDataModel()) }
                 }
-                .collectLatest { _pagingData.value = it }
+            }
+
+            SearchSectionId.CONVERSATIONS -> {
+                Pager(
+                    config = PagingConfig(
+                        pageSize = CONTACT_LIST_PAGE_SIZE,
+                        enablePlaceholders = false
+                    ),
+                    pagingSourceFactory = { searchConversationsUseCase(query.lowercase()) }
+                ).flow.map {
+                    it.map { item -> GlobalSearchListItem.ConversationItem(item.toContactMessageInfoDataModel()) }
+                }
+            }
+
+            SearchSectionId.CONTACTS -> {
+                Pager(
+                    config = PagingConfig(
+                        pageSize = CONTACT_LIST_PAGE_SIZE,
+                        enablePlaceholders = false
+                    ),
+                    pagingSourceFactory = { searchContactsUseCase(query.lowercase()) }
+                ).flow.map {
+                    it.map { item -> GlobalSearchListItem.ContactItem(item.toNewContactDataModel()) }
+                }
+            }
         }
     }
 

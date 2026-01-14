@@ -7,7 +7,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.summer.core.domain.model.SearchSectionId
@@ -87,11 +89,13 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
     private fun observeViewModel() {
         Log.d("SearchListFrag", "Setting up paging data observer")
         viewLifecycleOwner.lifecycleScope.launch {
-            Log.d("SearchListFrag", "Starting to collect paging data")
-            viewModel.pagingData.collectLatest { pagingData ->
-                Log.d("SearchListFrag", "Received paging data: ${System.identityHashCode(pagingData)}, submitting to adapter")
-                searchListPagingAdapter.submitData(pagingData)
-                Log.d("SearchListFrag", "Adapter item count after submit: ${searchListPagingAdapter.itemCount}")
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                Log.d("SearchListFrag", "Starting to collect paging data")
+                viewModel.pagingData.collectLatest { pagingData ->
+                    Log.d("SearchListFrag", "Received paging data: ${System.identityHashCode(pagingData)}, submitting to adapter")
+                    searchListPagingAdapter.submitData(pagingData)
+                    Log.d("SearchListFrag", "Adapter item count after submit: ${searchListPagingAdapter.itemCount}")
+                }
             }
         }
         
@@ -149,6 +153,7 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
                 header = PagingLoadStateAdapter { searchListPagingAdapter.retry() },
                 footer = PagingLoadStateAdapter { searchListPagingAdapter.retry() }
             )
+        mBinding.rvFragSearchListList.itemAnimator = null
     }
 
     private fun initSearchView() {
