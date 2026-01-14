@@ -1,6 +1,7 @@
 package com.summer.notifai.ui.search.searchlist
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
@@ -53,15 +54,18 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
 
     override fun onFragmentReady(instanceState: Bundle?) {
         viewModel.setSearchType(searchType)
-        viewModel.initializeSearchInput(senderAddressId, searchQuery)
+        Log.d("SearchListFrag", "onFragmentReady called with searchType=$searchType, query=$searchQuery")
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("SearchListFrag", "onViewCreated called")
         initSearchView()
         setUpAdapter()
         observeViewModel()
         listeners()
+        viewModel.initializeSearchInput(senderAddressId, searchQuery, searchType)
+        Log.d("SearchListFrag", "onViewCreated complete")
     }
 
     private fun listeners() {
@@ -81,9 +85,21 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
     }
 
     private fun observeViewModel() {
+        Log.d("SearchListFrag", "Setting up paging data observer")
         viewLifecycleOwner.lifecycleScope.launch {
+            Log.d("SearchListFrag", "Starting to collect paging data")
             viewModel.pagingData.collectLatest { pagingData ->
+                Log.d("SearchListFrag", "Received paging data: ${System.identityHashCode(pagingData)}, submitting to adapter")
                 searchListPagingAdapter.submitData(pagingData)
+                Log.d("SearchListFrag", "Adapter item count after submit: ${searchListPagingAdapter.itemCount}")
+            }
+        }
+        
+        // Add load state listener to track loading
+        viewLifecycleOwner.lifecycleScope.launch {
+            searchListPagingAdapter.loadStateFlow.collectLatest { loadStates ->
+                Log.d("SearchListFrag", "Load state: refresh=${loadStates.refresh}, append=${loadStates.append}, prepend=${loadStates.prepend}")
+                Log.d("SearchListFrag", "Current adapter item count: ${searchListPagingAdapter.itemCount}")
             }
         }
     }
@@ -128,7 +144,6 @@ class SearchListFrag : BaseFragment<FragSearchListBinding>() {
                 }
             }
         )
-
         mBinding.rvFragSearchListList.adapter =
             searchListPagingAdapter.withLoadStateHeaderAndFooter(
                 header = PagingLoadStateAdapter { searchListPagingAdapter.retry() },

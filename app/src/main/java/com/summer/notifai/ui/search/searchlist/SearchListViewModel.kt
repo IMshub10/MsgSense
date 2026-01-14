@@ -20,6 +20,7 @@ import com.summer.notifai.ui.datamodel.mapper.ContactInfoMapper.toContactMessage
 import com.summer.notifai.ui.datamodel.mapper.NewContactMapper.toNewContactDataModel
 import com.summer.notifai.ui.datamodel.mapper.SearchSmsMessageMapper.toSearchSmsMessageDataModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -51,8 +52,8 @@ class SearchListViewModel @Inject constructor(
     private var senderAddressId = 0L
 
     @OptIn(FlowPreview::class)
-    private val selectedQuery: StateFlow<String> = _searchFilter
-        .debounce(300)
+    private val _selectedQuery: StateFlow<String> = _searchFilter
+        .debounce(200)
         .map { it.trim().lowercase() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
@@ -65,7 +66,8 @@ class SearchListViewModel @Inject constructor(
         observeSearch()
     }
 
-    fun initializeSearchInput(senderAddressId: Long, searchFilter: String) {
+    fun initializeSearchInput(senderAddressId: Long, searchFilter: String, searchType: SearchSectionId) {
+        setSearchType(searchType)
         this.senderAddressId = senderAddressId
         _searchFilter.value = searchFilter.trim()
     }
@@ -80,8 +82,8 @@ class SearchListViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeSearch() {
-        viewModelScope.launch {
-            selectedQuery
+        viewModelScope.launch(Dispatchers.IO) {
+            _selectedQuery
                 .combine(_searchType) { query, type -> query.trim() to type }
                 .flatMapLatest { (query, type) ->
                     if (query.isBlank()) {
