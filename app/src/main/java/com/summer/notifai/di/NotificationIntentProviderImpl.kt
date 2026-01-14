@@ -48,4 +48,12 @@ class NotificationIntentProviderImpl @Inject constructor(
             .setComponentName(MainActivity::class.java)
             .createPendingIntent()
     }
+
+    override fun provideSmsProcessingPendingIntent(): PendingIntent {
+        return NavDeepLinkBuilder(context)
+            .setGraph(R.navigation.nav_main)
+            .setComponentName(MainActivity::class.java)
+            .setDestination(R.id.splashFragment)
+            .createPendingIntent()
+    }
 }

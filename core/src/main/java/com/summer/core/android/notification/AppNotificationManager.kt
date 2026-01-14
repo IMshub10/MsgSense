@@ -50,6 +50,7 @@ class AppNotificationManager @Inject constructor(
         val channelType = NotificationChannelType.SMS_PROCESSING
         return NotificationCompat.Builder(appContext, channelType.channelId)
             .setContentTitle(channelType.channelName)
+            .setContentIntent(notificationIntentProvider.provideSmsProcessingPendingIntent())
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_sms_sync_24x24)
             .setPriority(channelType.importance)
@@ -61,6 +62,7 @@ class AppNotificationManager @Inject constructor(
         val channelType = NotificationChannelType.SMS_PROCESSING
         val updatedNotification = NotificationCompat.Builder(appContext, channelType.channelId)
             .setContentTitle(channelType.channelName)
+            .setContentIntent(notificationIntentProvider.provideSmsProcessingPendingIntent())
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_sms_sync_24x24)
             .setPriority(channelType.importance)
@@ -110,7 +112,7 @@ class AppNotificationManager @Inject constructor(
 
     fun showDailySummaryNotification(totalMessages: Int) {
         val notification = NotificationCompat.Builder(context, NotificationChannelType.SUMMARY.channelId)
-            .setSmallIcon(android.R.drawable.star_on) //TODO(Replace with icon)
+            .setSmallIcon(R.drawable.ic_sms_sync_24x24)
             .setContentTitle("Today's Messages")
             .setContentText("You received $totalMessages messages today.")
             .setContentIntent(notificationIntentProvider.provideSummaryPendingIntent())
