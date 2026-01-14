@@ -15,7 +15,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.summer.core.android.notification.AppNotificationManager
 import com.summer.core.android.permission.manager.IPermissionManager
@@ -27,6 +26,7 @@ import com.summer.core.util.DateUtils
 import com.summer.notifai.R
 import com.summer.notifai.databinding.FragSmsInboxBinding
 import com.summer.notifai.ui.MainActivity
+import com.summer.notifai.ui.common.SafeLinearLayoutManager
 import com.summer.notifai.ui.datamodel.SmsInboxListItem
 import com.summer.notifai.ui.inbox.SmsInboxViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -214,7 +214,7 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
     }
 
     private fun setupRecyclerView() {
-        val layoutManager = LinearLayoutManager(requireContext()).apply {
+        val layoutManager = SafeLinearLayoutManager(requireContext()).apply {
             reverseLayout = true
             stackFromEnd = true
         }
@@ -244,7 +244,7 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
 
         mBinding.rvSmsMessages.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                val lm = recyclerView.layoutManager as? LinearLayoutManager ?: return
+                val lm = recyclerView.layoutManager as? SafeLinearLayoutManager ?: return
                 val topPos = lm.findLastVisibleItemPosition()
                 val visibleTop = lm.findFirstVisibleItemPosition()
                 smsInboxViewModel.isAtBottom.value = visibleTop <= 1
@@ -315,7 +315,7 @@ class SmsInboxFrag : BaseFragment<FragSmsInboxBinding>() {
                 it is SmsInboxListItem.Message && it.data.id == targetId
             }
             if (index != -1) {
-                val layoutManager = mBinding.rvSmsMessages.layoutManager as LinearLayoutManager
+                val layoutManager = mBinding.rvSmsMessages.layoutManager as SafeLinearLayoutManager
                 layoutManager.scrollToPosition(index)
                 targetId?.let {
                     smsInboxViewModel.flashMessage(targetId) {

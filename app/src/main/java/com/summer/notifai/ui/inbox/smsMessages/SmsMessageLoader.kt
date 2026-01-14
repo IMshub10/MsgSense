@@ -136,6 +136,40 @@ class SmsMessageLoader(
                         loadOlderMessages(forceRefresh = true)
                     }
             }
+
+            // Observe status updates (e.g., PENDING → COMPLETE/FAILED)
+            launch {
+                smsDao.observeMaxUpdatedAtBySenderId(senderAddressId)
+                    .distinctUntilChanged()
+                    .collect {
+                        refreshMessageStatuses()
+                    }
+            }
+        }
+    }
+
+    /**
+     * Lightweight refresh for status updates only.
+     * Fetches just the ID and status of recently updated messages,
+     * then updates the cached items in-place using notifyChange().
+     */
+    private suspend fun refreshMessageStatuses() {
+        val statusUpdates = smsDao.getRecentStatusUpdates(senderAddressId, limit = 10)
+        if (statusUpdates.isEmpty()) return
+        
+        messageMutex.withLock {
+            // Create a snapshot to avoid ConcurrentModificationException
+            val snapshot = existingMessages.toList()
+            
+            for ((id, newStatus) in statusUpdates) {
+                val existing = snapshot.find { it.data.id == id }
+                if (existing != null && existing.data.status != newStatus) {
+                    existing.data.status = newStatus
+                    withContext(Dispatchers.Main) {
+                        existing.data.notifyChange()
+                    }
+                }
+            }
         }
     }
 

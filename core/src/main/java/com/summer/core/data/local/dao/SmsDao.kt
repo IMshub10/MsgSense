@@ -13,6 +13,7 @@ import com.summer.core.data.local.entities.SmsEntity
 import com.summer.core.data.local.model.SearchSmsMessageQueryModel
 import com.summer.core.data.local.model.SmsMessageModel
 import com.summer.core.data.local.model.SmsPagingKey
+import com.summer.core.data.local.model.SmsStatusUpdate
 import com.summer.core.util.determineSenderType
 import com.summer.core.util.normalizePhoneNumber
 import com.summer.core.util.trimSenderId
@@ -256,6 +257,23 @@ interface SmsDao {
 
     @Query("SELECT MIN(date) FROM sms_messages WHERE sender_address_id = :senderId")
     fun observeMinDateBySenderId(senderId: Long): Flow<Long?>
+
+    @Query("SELECT MAX(updated_at_app) FROM sms_messages WHERE sender_address_id = :senderId")
+    fun observeMaxUpdatedAtBySenderId(senderId: Long): Flow<Long?>
+
+    @Query(
+        """
+        SELECT id, status 
+        FROM sms_messages 
+        WHERE sender_address_id = :senderAddressId
+        ORDER BY updated_at_app DESC
+        LIMIT :limit
+    """
+    )
+    suspend fun getRecentStatusUpdates(
+        senderAddressId: Long,
+        limit: Int
+    ): List<SmsStatusUpdate>
 
     @Query("DELETE FROM sms_messages WHERE id IN (:ids)")
     suspend fun deleteSmsMessagesByIds(ids: List<Long>)

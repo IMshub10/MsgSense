@@ -106,7 +106,6 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginBottom="@dimen/spacing_x_small"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toTopOf="@+id/barrier_fragSmsInbox_bottomSection"
             app:layout_constraintTop_toBottomOf="@id/cl_fragSmsInbox_header"
             tools:listitem="@layout/item_received_sms_message" />

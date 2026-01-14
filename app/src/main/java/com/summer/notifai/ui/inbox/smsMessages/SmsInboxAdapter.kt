@@ -34,7 +34,8 @@ class SmsInboxAdapter(
             ): Boolean {
                 return when {
                     oldItem is SmsInboxListItem.Message && newItem is SmsInboxListItem.Message ->
-                        oldItem.data.id == newItem.data.id
+                        oldItem.data.id == newItem.data.id &&
+                        oldItem.data.status == newItem.data.status
 
                     oldItem is SmsInboxListItem.Header && newItem is SmsInboxListItem.Header ->
                         oldItem.header.label == newItem.header.label

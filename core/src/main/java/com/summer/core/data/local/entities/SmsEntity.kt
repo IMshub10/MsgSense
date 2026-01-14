@@ -23,7 +23,7 @@ import com.summer.core.data.local.entities.SmsEntity.Companion.TABLE_NAME
     indices = [Index(
         value = ["sender_address_id"],
         unique = false
-    ), Index(value = ["android_sms_id"], unique = false)]
+    ), Index(value = ["android_sms_id"], unique = true)]
 )
 data class SmsEntity(
     @ColumnInfo(name = "id")
