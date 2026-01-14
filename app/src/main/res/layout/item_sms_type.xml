@@ -20,13 +20,28 @@
             style="@style/text_body"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@{model.smsType}"
+            android:layout_marginTop="@dimen/spacing_tiny"
             android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf='@+id/switchImportant'
+            app:formattedSmsType="@{model.smsType}"
+            app:layout_constraintEnd_toStartOf="@+id/switchImportant"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="UPDATES" />
+            tools:text="Banking transaction" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvSmsTypeDescription"
+            style="@style/text_caption_secondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/spacing_small"
+            android:text="@{model.description}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/switchImportant"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvSmsTypeName"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="Debits, credits, and payment confirmations" />
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switchImportant"

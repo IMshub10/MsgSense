@@ -39,7 +39,7 @@
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false"
                     android:scrollIndicators="none"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layoutManager="com.summer.notifai.ui.common.SafeLinearLayoutManager"
                     app:layout_constraintBottom_toBottomOf="parent"
                     tools:listitem="@layout/item_permission" />
 
