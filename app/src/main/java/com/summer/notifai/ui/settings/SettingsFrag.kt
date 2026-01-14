@@ -39,10 +39,14 @@ class SettingsFrag : BaseFragment<FragSettingsBinding>() {
         }
         mBinding.tvFragSettingsItemPrivacy.setOnClickListener {
             if (findNavController().currentDestination?.id == R.id.settingsFrag) {
-                val url = "https://github.com/IMshub10/NotifAI/wiki"
-                startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+                navigateToPrivacyPolicyPage()
             }
         }
+    }
+
+    private fun navigateToPrivacyPolicyPage() {
+        val url = "https://github.com/IMshub10/MsgSense/wiki"
+        startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
     }
 
     private fun setupStoreInSystemToggle() {
