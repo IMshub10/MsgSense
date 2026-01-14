@@ -13,7 +13,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/shape_color_surface_radius_medium"
+        android:background="@drawable/shape_card_background"
         android:padding="@dimen/spacing_small"
         app:layout_marginBottom="@{model.isLast ? @dimen/spacing_nothing : @dimen/spacing_small}"
         app:layout_marginTop="@{model.isFirst ? @dimen/spacing_nothing : @dimen/spacing_small}">
