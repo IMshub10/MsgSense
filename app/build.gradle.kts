@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,12 +11,19 @@ plugins {
     alias(libs.plugins.baselineprofile)
 }
 
+// Load keystore properties
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
+}
+
 android {
     namespace = "com.summer.notifai"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.summer.notifai"
+        applicationId = "com.utilities.msgsense"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
@@ -24,22 +33,14 @@ android {
     }
 
     signingConfigs {
-        // Use debug signing for now - replace with release keystore for production
         getByName("debug") {
             // Uses default debug keystore
         }
         create("release") {
-            // TODO: Configure your release keystore
-            // storeFile = file("path/to/your/keystore.jks")
-            // storePassword = "your-store-password"
-            // keyAlias = "your-key-alias"
-            // keyPassword = "your-key-password"
-            
-            // For now, use debug keystore (remove this for production)
-            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
         }
     }
 
