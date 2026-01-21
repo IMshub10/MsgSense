@@ -16,4 +16,5 @@
     <attr name="colorChatBox" format="color" />
     <attr name="colorSmsSelected" format="color"/>
     <attr name="colorSelectedMessageOverlay" format="color"/>
+    <attr name="cardBackground" format="color"/>
 </resources>

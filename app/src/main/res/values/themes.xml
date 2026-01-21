@@ -35,6 +35,7 @@
         <item name="boxBackground">@color/background_light</item>
         <item name="tagBackground">@color/grey_lightest</item>
         <item name="surfaceBackground">@color/circle_background_light</item>
+        <item name="cardBackground">@color/background_light</item>
 
         <item name="colorSeparator">@color/separator_light</item>
         <item name="iconColorPrimary">?attr/colorLink</item>
