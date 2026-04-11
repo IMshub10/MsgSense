@@ -15,6 +15,7 @@ material = "1.12.0"
 constraintlayout = "2.2.1"
 hiltVersion = "2.50"
 navigationUiKtx = "2.8.9"
+onnxruntime = "1.24.3"
 onnxruntimeAndroidVersion = "latest.release"
 opennlpTools = "1.9.3"
 pagingRuntimeKtx = "3.3.6"
@@ -63,6 +64,7 @@ libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", vers
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+onnxruntime = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
 onnxruntime-android-vlatestrelease = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntimeAndroidVersion" }
 opennlp-tools = { module = "org.apache.opennlp:opennlp-tools", version.ref = "opennlpTools" }
 androidx-databinding-runtime = { group = "androidx.databinding", name = "databinding-runtime", version.ref = "databindingRuntime" }

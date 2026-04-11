@@ -37,10 +37,10 @@ android {
             // Uses default debug keystore
         }
         create("release") {
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
+//            storeFile = file(keystoreProperties["storeFile"] as String)
+//            storePassword = keystoreProperties["storePassword"] as String
+//            keyAlias = keystoreProperties["keyAlias"] as String
+//            keyPassword = keystoreProperties["keyPassword"] as String
         }
     }
 
@@ -82,6 +82,29 @@ baselineProfile {
     automaticGenerationDuringBuild = false
 }
 
+// --- Rust HF tokenizer JNI build (banking_test spike) ---
+tasks.register<Exec>("buildRustTokenizerAndroid") {
+    description = "Cross-compile Rust HF tokenizer JNI for Android (arm64-v8a + x86_64)"
+    val rustDir = file("src/main/java/com/summer/notifai/banking_test/rust_tokenizer")
+    val jniLibsDir = file("src/main/jniLibs")
+    workingDir = rustDir
+    environment("CARGO_TARGET_DIR", "./target")
+    environment("ANDROID_NDK_HOME",
+        providers.environmentVariable("ANDROID_NDK_HOME").orElse(
+            "${android.sdkDirectory}/ndk/${file("${android.sdkDirectory}/ndk").list()?.maxOrNull() ?: ""}"
+        ).get()
+    )
+    commandLine(
+        "${System.getProperty("user.home")}/.cargo/bin/cargo", "ndk",
+        "-t", "arm64-v8a",
+        "-t", "x86_64",
+        "-o", jniLibsDir.absolutePath,
+        "build", "--release"
+    )
+    inputs.files(fileTree(rustDir) { include("src/**", "Cargo.toml", "Cargo.lock") })
+    outputs.dir(jniLibsDir)
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(libs.androidx.constraintlayout)
@@ -89,7 +112,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
 
+    implementation(libs.converter.gson)
+    implementation(libs.onnxruntime.android.vlatestrelease)
+
     testImplementation(libs.junit)
+    testImplementation(libs.converter.gson)
+    testImplementation(libs.onnxruntime)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 

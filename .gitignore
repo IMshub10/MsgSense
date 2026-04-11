@@ -18,3 +18,22 @@ local.properties
 *.jks
 *.keystore
 keystore.properties
+
+# Rust — Cargo build output (e.g. banking_test JNI tokenizer)
+**/rust_tokenizer/target/
+
+# Rust cross-compiled JNI libs (built by buildRustTokenizerAndroid task)
+app/src/main/jniLibs/
+
+# Large golden test fixture (generate locally or from CI artifact)
+app/src/main/assets/banking_test/golden_test.json
+
+# Kotlin / Gradle caches
+.kotlin/
+
+# JVM heap dumps
+*.hprof
+
+.idea
+/app/src/google-services.json
+.cursor
