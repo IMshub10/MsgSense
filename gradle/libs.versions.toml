@@ -17,6 +17,7 @@ hiltVersion = "2.50"
 navigationUiKtx = "2.8.9"
 onnxruntime = "1.24.3"
 onnxruntimeAndroidVersion = "latest.release"
+tensorflowLite = "2.16.1"
 opennlpTools = "1.9.3"
 pagingRuntimeKtx = "3.3.6"
 roomRuntime = "2.6.1"
@@ -66,6 +67,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 onnxruntime = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
 onnxruntime-android-vlatestrelease = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntimeAndroidVersion" }
+tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflowLite" }
 opennlp-tools = { module = "org.apache.opennlp:opennlp-tools", version.ref = "opennlpTools" }
 androidx-databinding-runtime = { group = "androidx.databinding", name = "databinding-runtime", version.ref = "databindingRuntime" }
 

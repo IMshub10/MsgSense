@@ -75,6 +75,12 @@ android {
     buildFeatures {
         dataBinding = true
     }
+
+    // Keep ML model files uncompressed in the APK so TFLite/ORT can mmap them
+    // and so ONNX external-data offsets stay valid.
+    androidResources {
+        noCompress += listOf("tflite", "onnx", "onnx.data")
+    }
 }
 
 baselineProfile {
@@ -82,10 +88,10 @@ baselineProfile {
     automaticGenerationDuringBuild = false
 }
 
-// --- Rust HF tokenizer JNI build (banking_test spike) ---
+// --- Rust HF tokenizer JNI build (shared banking_ner package) ---
 tasks.register<Exec>("buildRustTokenizerAndroid") {
     description = "Cross-compile Rust HF tokenizer JNI for Android (arm64-v8a + x86_64)"
-    val rustDir = file("src/main/java/com/summer/notifai/banking_test/rust_tokenizer")
+    val rustDir = file("src/main/java/com/summer/notifai/banking_ner/rust_tokenizer")
     val jniLibsDir = file("src/main/jniLibs")
     workingDir = rustDir
     environment("CARGO_TARGET_DIR", "./target")
@@ -114,6 +120,7 @@ dependencies {
 
     implementation(libs.converter.gson)
     implementation(libs.onnxruntime.android.vlatestrelease)
+    implementation(libs.tensorflow.lite)
 
     testImplementation(libs.junit)
     testImplementation(libs.converter.gson)

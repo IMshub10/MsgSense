@@ -26,7 +26,8 @@ keystore.properties
 app/src/main/jniLibs/
 
 # Large golden test fixture (generate locally or from CI artifact)
-app/src/main/assets/banking_test/golden_test.json
+app/src/main/assets/banking_test_onxx/golden_test.json
+app/src/main/assets/banking_test_tflite/golden_test.json
 
 # Kotlin / Gradle caches
 .kotlin/
