@@ -19,6 +19,7 @@ import com.summer.core.ml.util.Constants.SEPARATOR
 import com.summer.core.ml.util.Constants.TOKEN_TYPE_IDS
 import com.summer.core.ml.util.Constants.TOKENIZER_FILE_NAME
 import com.summer.core.ml.util.Constants.VOCAB
+import com.summer.core.ml.tokenizer.HfTokenizerBridge
 import com.summer.core.ml.tokenizer.WordPieceTokenizer
 import com.summer.core.util.roundToTwoDecimalPlaces
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,23 +38,27 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
     private var ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
     private var ortSession: OrtSession
     private var vocab: Map<String, Long>
-    private var invVocab: Map<Long, String>
+    private var invVocab: Map<Long, String> // Inverse vocab for debugging
     private var labelMap: Map<Int, String>
     private var wordPieceTokenizer: WordPieceTokenizer
     private val padTokenId: Long
     private val usesTokenTypeIds: Boolean
+    private var hasLoggedTokenizerPath = false
 
     init {
         val modelBuffer = loadModelFile(appContext)
         ortSession = ortEnv.createSession(modelBuffer, OrtSession.SessionOptions())
 
+        // Load Tokenizer Vocab
         val vocabJson = loadFullJson(appContext)
         vocab = vocabJson.getJSONObject(VOCAB).toMapLong()
         invVocab = vocabJson.getJSONObject(INVERSE_VOCAB).toMapString()
 
+        // Tokenizer
         wordPieceTokenizer = WordPieceTokenizer(vocab)
         padTokenId = vocab[PADDING_TOKEN] ?: vocab["<pad>"] ?: error("Missing pad token in tokenizer vocab")
 
+        // Load Label Encoder
         labelMap = loadLabelMap(appContext)
         usesTokenTypeIds = ortSession.inputInfo.containsKey(TOKEN_TYPE_IDS)
         Log.i(
@@ -67,10 +72,11 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         val byteArray = inputStream.readBytes()
         inputStream.close()
 
+        // Allocate a direct ByteBuffer
         val byteBuffer = ByteBuffer.allocateDirect(byteArray.size)
-        byteBuffer.order(ByteOrder.nativeOrder())
+        byteBuffer.order(ByteOrder.nativeOrder()) // Set native byte order
         byteBuffer.put(byteArray)
-        byteBuffer.flip()
+        byteBuffer.flip() // Reset position to 0 for reading
         return byteBuffer
     }
 
@@ -102,15 +108,31 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         return map
     }
 
+    /**
+     * returns string in format Sender:senderId | Message:messageBody
+     */
     private fun getInputTextFromSenderNMessage(sender: String, message: String): String {
         return "$MESSAGE_SENDER: $sender $SEPARATOR $MESSAGE: $message"
     }
 
+    /**
+     * Runs ONNX inference and returns label + confidence score
+     */
     fun classifySms(sender: String, message: String): SmsClassifierOutputModel {
         val inputText = getInputTextFromSenderNMessage(sender, message)
-        val inputTokens = wordPieceTokenizer.tokenize(inputText, maxLength = 128)
-        val attentionMask = inputTokens.map { if (it != padTokenId) 1L else 0L }.toLongArray()
-        val tokenTypeIds = LongArray(128) { 0L }
+        val encodedInputs = encodeWithHfBridge(inputText)
+        val inputTokens = encodedInputs?.inputIds ?: wordPieceTokenizer.tokenize(inputText, maxLength = 128)
+        val attentionMask = encodedInputs?.attentionMask
+            ?: inputTokens.map { if (it != padTokenId) 1L else 0L }.toLongArray()
+        val tokenTypeIds = encodedInputs?.tokenTypeIds ?: LongArray(128) { 0L }
+
+        if (!hasLoggedTokenizerPath) {
+            hasLoggedTokenizerPath = true
+            Log.i(
+                logTag,
+                "Tokenizer path used=${if (encodedInputs != null) "hf_native_bridge" else "wordpiece_fallback"}"
+            )
+        }
 
         val inputTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(inputTokens), longArrayOf(1, 128))
         val attentionTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(attentionMask), longArrayOf(1, 128))
@@ -124,8 +146,7 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
             attentionTensor.use { mask ->
                 tokenTypeTensor.use { typeIds ->
                     val modelInputs = mutableMapOf<String, OnnxTensor>(
-                        INPUT_IDS to ids,
-                        ATTENTION_MASK to mask
+                        INPUT_IDS to ids, ATTENTION_MASK to mask
                     )
                     if (typeIds != null) {
                         modelInputs[TOKEN_TYPE_IDS] = typeIds
@@ -153,6 +174,9 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         }
     }
 
+    /**
+     * Computes Softmax on logits
+     */
     private fun softmax(logits: FloatArray): FloatArray {
         val maxLogit = logits.maxOrNull()!!
         val expLogits = logits.map { exp((it - maxLogit).toDouble()).toFloat() }
@@ -160,7 +184,26 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         return expLogits.map { it / sumExpLogits }.toFloatArray()
     }
 
+    private fun encodeWithHfBridge(inputText: String): EncodedInputs? {
+        return try {
+            val result = HfTokenizerBridge.encodeToModelInputs(appContext, inputText, 128) as? Array<*>
+            if (result == null || result.size < 2) return null
+            val inputIds = result[0] as? LongArray ?: return null
+            val attentionMask = result[1] as? LongArray ?: return null
+            val tokenTypeIds = (result.getOrNull(2) as? LongArray) ?: LongArray(128) { 0L }
+            EncodedInputs(
+                inputIds = inputIds,
+                attentionMask = attentionMask,
+                tokenTypeIds = tokenTypeIds
+            )
+        } catch (t: Throwable) {
+            Log.w(logTag, "HF tokenizer bridge encode failed, using fallback", t)
+            null
+        }
+    }
+
     private fun parseLabel(rawLabel: String): ParsedLabel {
+        // New format: "<importance>_<smsTypeId>", e.g. "1_16"
         rawLabel.split("_").takeIf { it.size == 2 }?.let { parts ->
             val importance = parts[0].toIntOrNull()
             val smsTypeId = parts[1].toIntOrNull()
@@ -174,6 +217,7 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
             }
         }
 
+        // Legacy fallback
         val digitsOnly = rawLabel.filter(Char::isDigit)
         if (digitsOnly.length >= 3) {
             val importance = digitsOnly.first().digitToInt()
@@ -203,6 +247,12 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         val smsSubClassTypeId: Int
     )
 
+    private data class EncodedInputs(
+        val inputIds: LongArray,
+        val attentionMask: LongArray,
+        val tokenTypeIds: LongArray
+    )
+
     companion object {
         fun isEnoughMemoryAvailable(context: Context): Boolean {
             val activityManager =
@@ -210,12 +260,12 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
             val memoryInfo = ActivityManager.MemoryInfo()
             activityManager?.getMemoryInfo(memoryInfo)
 
-            val availableRam = memoryInfo.availMem / (1024 * 1024)
-            val totalRam = memoryInfo.totalMem / (1024 * 1024)
+            val availableRam = memoryInfo.availMem / (1024 * 1024) // Convert to MB
+            val totalRam = memoryInfo.totalMem / (1024 * 1024) // Convert to MB
 
             Log.d("OnnxModel", "Available RAM: ${availableRam}MB, Total RAM: ${totalRam}MB")
 
-            return availableRam > 200
+            return availableRam > 200 // Require at least **200MB free RAM** to load the model
         }
     }
 }
