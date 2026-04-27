@@ -24,6 +24,7 @@ import javax.inject.Singleton
  * Batches are processed concurrently for performance and fetched using ID-based pagination.
  */
 @Singleton
+@OptIn(ExperimentalCoroutinesApi::class)
 class SmsBatchProcessor @Inject constructor(
     private val smsContentProvider: ISmsContentProvider,
     private val smsDao: SmsDao,
@@ -32,6 +33,7 @@ class SmsBatchProcessor @Inject constructor(
 ) {
 
     private val tag = "SmsBatchProcessor"
+    private val classificationDispatcher = Dispatchers.Default.limitedParallelism(1)
 
     /**
      * Triggers the full SMS classification loop.
@@ -61,6 +63,7 @@ class SmsBatchProcessor @Inject constructor(
                 // Prioritize newly arrived messages above the last processed _id
                 val latestDeviceId = smsContentProvider.getLastAndroidSmsId() ?: -1
                 if (latestDeviceId > lastProcessedId && lastProcessedId != -1) {
+                    val fetchStartMs = System.currentTimeMillis()
                     val newCursor = smsContentProvider.getSmsCursorWithOffset(
                         offsetId = lastProcessedId,
                         limit = batchSize,
@@ -70,13 +73,18 @@ class SmsBatchProcessor @Inject constructor(
                     val newMessages = newCursor?.use {
                         SmsMapper.mapCursorToSmsList(it, smsDao, countryCodeProvider.getMyCountryCode())
                     } ?: emptyList()
+                    logBatchFetchDuration(
+                        batchLabel = "new_messages",
+                        messageCount = newMessages.size,
+                        durationMs = System.currentTimeMillis() - fetchStartMs
+                    )
 
                     // Recalculate SMS count in case new messages were inserted recently
                     totalSmsCount = smsContentProvider.getTotalSmsCount()
 
                     if (newMessages.isNotEmpty()) {
                         val classifiedNew = classifySmsBatch(newMessages)
-                        insertClassifiedSms(classifiedNew)
+                        insertClassifiedSms(classifiedNew, batchLabel = "new_messages")
 
                         Log.d(tag, "Inserted ${newMessages.size} SMS (afterId = $firstProcessedId)")
 
@@ -101,7 +109,7 @@ class SmsBatchProcessor @Inject constructor(
                     hasMoreData = false
                 } else {
                     val allMessages = nonEmptyBatches.flatten()
-                    insertClassifiedSms(allMessages)
+                    insertClassifiedSms(allMessages, batchLabel = "older_messages")
 
                     processedCount += allMessages.size
 
@@ -144,6 +152,7 @@ class SmsBatchProcessor @Inject constructor(
                     // Process newly arrived messages
                     val latestDeviceId = smsContentProvider.getLastAndroidSmsId() ?: -1
                     if (latestDeviceId > lastProcessedId && lastProcessedId != -1) {
+                        val fetchStartMs = System.currentTimeMillis()
                         val newCursor = smsContentProvider.getSmsCursorWithOffset(
                             offsetId = lastProcessedId,
                             limit = batchSize,
@@ -154,12 +163,17 @@ class SmsBatchProcessor @Inject constructor(
                         val newMessages = newCursor?.use {
                             SmsMapper.mapCursorToSmsList(it, smsDao, countryCodeProvider.getMyCountryCode())
                         } ?: emptyList()
+                        logBatchFetchDuration(
+                            batchLabel = "new_messages",
+                            messageCount = newMessages.size,
+                            durationMs = System.currentTimeMillis() - fetchStartMs
+                        )
 
                         totalSmsCount = smsContentProvider.getTotalSmsCount()
 
                         if (newMessages.isNotEmpty()) {
                             val classifiedNew = classifySmsBatch(newMessages)
-                            insertClassifiedSms(classifiedNew)
+                            insertClassifiedSms(classifiedNew, batchLabel = "new_messages")
                             lastProcessedId = classifiedNew.maxOfOrNull { it.androidSmsId ?: lastProcessedId } ?: lastProcessedId
                             continue
                         }
@@ -177,7 +191,7 @@ class SmsBatchProcessor @Inject constructor(
                         hasMoreData = false
                     } else {
                         val allMessages = nonEmptyBatches.flatten()
-                        insertClassifiedSms(allMessages)
+                        insertClassifiedSms(allMessages, batchLabel = "older_messages")
                         processedCount += allMessages.size
                         firstProcessedId = allMessages.minOfOrNull { it.androidSmsId ?: firstProcessedId } ?: firstProcessedId
                         Log.d(tag, "Inserted ${allMessages.size} SMS (beforeId = $firstProcessedId)")
@@ -221,15 +235,22 @@ class SmsBatchProcessor @Inject constructor(
         baseId: Int,
         offset: Int
     ): List<SmsEntity> {
+        val fetchStartMs = System.currentTimeMillis()
         val cursor = smsContentProvider.getSmsCursorWithOffset(
             offsetId = baseId,
             limit = batchSize,
             offset = offset,
             isOrderAscending = false
         )
-        return cursor?.use {
+        val fetchedMessages = cursor?.use {
             SmsMapper.mapCursorToSmsList(it, smsDao, countryCodeProvider.getMyCountryCode())
-        }?.takeIf { it.isNotEmpty() }?.let {
+        } ?: emptyList()
+        logBatchFetchDuration(
+            batchLabel = "older_messages(offset=$offset)",
+            messageCount = fetchedMessages.size,
+            durationMs = System.currentTimeMillis() - fetchStartMs
+        )
+        return fetchedMessages.takeIf { it.isNotEmpty() }?.let {
             classifySmsBatch(it)
         } ?: emptyList()
     }
@@ -239,34 +260,59 @@ class SmsBatchProcessor @Inject constructor(
      * Falls back to the original SMS entity on failure.
      */
     private suspend fun classifySmsBatch(smsBatch: List<SmsEntity>): List<SmsEntity> {
-        return smsBatch.map { sms ->
-            try {
-                val classification = withContext(Dispatchers.Default) {
-                    smsClassifierModel.classifySms(sms.rawAddress, sms.body)
+        if (smsBatch.isEmpty()) return emptyList()
+
+        val classifyStartMs = System.currentTimeMillis()
+        val classifiedBatch = withContext(classificationDispatcher) {
+            smsBatch.map { sms ->
+                try {
+                    val classification =
+                        smsClassifierModel.classifySms(sms.rawAddress, sms.body)
+                    sms.copy(
+                        importanceScore = classification.importanceScore,
+                        smsClassificationTypeId = classification.smsClassificationTypeId,
+                        confidenceScore = classification.confidenceScore
+                    )
+                } catch (e: Exception) {
+                    Log.w(tag, "Error classifying SMS from ${sms.rawAddress}", e)
+                    FirebaseCrashlytics.getInstance().recordException(e)
+                    sms
                 }
-                sms.copy(
-                    importanceScore = classification.importanceScore,
-                    smsClassificationTypeId = classification.smsClassificationTypeId,
-                    confidenceScore = classification.confidenceScore
-                )
-            } catch (e: Exception) {
-                Log.w(tag, "Error classifying SMS from ${sms.rawAddress}", e)
-                FirebaseCrashlytics.getInstance().recordException(e)
-                sms
             }
         }
+
+        val classifyDurationMs = System.currentTimeMillis() - classifyStartMs
+        val perMessageAvgMs = classifyDurationMs.toDouble() / smsBatch.size
+        Log.d(
+            tag,
+            "Classified batch size=${smsBatch.size} in ${classifyDurationMs}ms (avg=${"%.2f".format(perMessageAvgMs)}ms/msg)"
+        )
+        return classifiedBatch
     }
 
     /**
      * Inserts a list of classified SMS entities into the local Room database.
      * Logs and reports errors but does not crash the loop.
      */
-    private suspend fun insertClassifiedSms(smsList: List<SmsEntity>) {
+    private suspend fun insertClassifiedSms(smsList: List<SmsEntity>, batchLabel: String) {
+        val insertStartMs = System.currentTimeMillis()
         try {
             smsDao.insertAllSmsMessages(smsList)
+            Log.d(
+                tag,
+                "Inserted batch=$batchLabel size=${smsList.size} in ${System.currentTimeMillis() - insertStartMs}ms"
+            )
         } catch (e: Exception) {
             Log.e(tag, "DB insert failed", e)
             FirebaseCrashlytics.getInstance().recordException(e)
         }
+    }
+
+    private fun logBatchFetchDuration(
+        batchLabel: String,
+        messageCount: Int,
+        durationMs: Long
+    ) {
+        Log.d(tag, "Fetched batch=$batchLabel size=$messageCount in ${durationMs}ms")
     }
 }

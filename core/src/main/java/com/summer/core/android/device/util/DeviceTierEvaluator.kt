@@ -30,9 +30,9 @@ class DeviceTierEvaluator @Inject constructor(@ApplicationContext private val co
 
     fun getRecommendedBatchSettings(): Pair<Int, Int> {
         return when (deviceTier) {
-            DeviceTier.HIGH_END -> 3 to 8
-            DeviceTier.MID_RANGE -> 2 to 5
-            DeviceTier.LOW_END -> 1 to 2
+            DeviceTier.HIGH_END -> 64 to 1
+            DeviceTier.MID_RANGE -> 32 to 1
+            DeviceTier.LOW_END -> 8 to 1
         }
     }
 

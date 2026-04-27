@@ -119,21 +119,30 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
      * Runs ONNX inference and returns label + confidence score
      */
     fun classifySms(sender: String, message: String): SmsClassifierOutputModel {
+        val totalStartNs = System.nanoTime()
+
+        val inputTextStartNs = totalStartNs
         val inputText = getInputTextFromSenderNMessage(sender, message)
+        val inputTextDurationMs = elapsedMs(inputTextStartNs)
+
+        val tokenizeStartNs = System.nanoTime()
         val encodedInputs = encodeWithHfBridge(inputText)
         val inputTokens = encodedInputs?.inputIds ?: wordPieceTokenizer.tokenize(inputText, maxLength = 128)
         val attentionMask = encodedInputs?.attentionMask
             ?: inputTokens.map { if (it != padTokenId) 1L else 0L }.toLongArray()
         val tokenTypeIds = encodedInputs?.tokenTypeIds ?: LongArray(128) { 0L }
+        val tokenizeDurationMs = elapsedMs(tokenizeStartNs)
+        val tokenizerPath = if (encodedInputs != null) "hf_native_bridge" else "wordpiece_fallback"
 
         if (!hasLoggedTokenizerPath) {
             hasLoggedTokenizerPath = true
             Log.i(
                 logTag,
-                "Tokenizer path used=${if (encodedInputs != null) "hf_native_bridge" else "wordpiece_fallback"}"
+                "Tokenizer path used=$tokenizerPath"
             )
         }
 
+        val tensorStartNs = System.nanoTime()
         val inputTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(inputTokens), longArrayOf(1, 128))
         val attentionTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(attentionMask), longArrayOf(1, 128))
         val tokenTypeTensor = if (usesTokenTypeIds) {
@@ -141,6 +150,7 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         } else {
             null
         }
+        val tensorDurationMs = elapsedMs(tensorStartNs)
 
         inputTensor.use { ids ->
             attentionTensor.use { mask ->
@@ -152,7 +162,11 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
                         modelInputs[TOKEN_TYPE_IDS] = typeIds
                     }
 
+                    val onnxStartNs = System.nanoTime()
                     ortSession.run(modelInputs).use { results ->
+                        val onnxDurationMs = elapsedMs(onnxStartNs)
+
+                        val postProcessStartNs = System.nanoTime()
                         val logits = (results[0].value as Array<FloatArray>)[0]
                         val probabilities = softmax(logits)
 
@@ -160,6 +174,13 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
                         val predictedLabel = labelMap[maxIndex] ?: "0_0"
                         val confidenceScore = probabilities[maxIndex].roundToTwoDecimalPlaces()
                         val parsed = parseLabel(predictedLabel)
+                        val postProcessDurationMs = elapsedMs(postProcessStartNs)
+                        val totalDurationMs = elapsedMs(totalStartNs)
+
+                        Log.d(
+                            logTag,
+                            "Inference timing text=${formatMs(inputTextDurationMs)}ms tokenize=${formatMs(tokenizeDurationMs)}ms tensors=${formatMs(tensorDurationMs)}ms onnx=${formatMs(onnxDurationMs)}ms post=${formatMs(postProcessDurationMs)}ms total=${formatMs(totalDurationMs)}ms tokenizer_path=$tokenizerPath"
+                        )
 
                         return SmsClassifierOutputModel(
                             importanceScore = parsed.importanceScore,
@@ -252,6 +273,10 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         val attentionMask: LongArray,
         val tokenTypeIds: LongArray
     )
+
+    private fun elapsedMs(startNs: Long): Double = (System.nanoTime() - startNs) / 1_000_000.0
+
+    private fun formatMs(durationMs: Double): String = "%.2f".format(durationMs)
 
     companion object {
         fun isEnoughMemoryAvailable(context: Context): Boolean {
