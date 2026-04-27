@@ -69,9 +69,12 @@
 }
 
 #---------------------------------
-# ONNX Runtime (CRITICAL - JNI needs full class names)
+# ONNX Runtime / JNI bridge
 #---------------------------------
 -keep class ai.onnxruntime.** { *; }
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
 
 #---------------------------------
 # Enums, Parcelable, Serializable
