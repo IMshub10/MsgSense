@@ -7,6 +7,8 @@ import com.summer.core.ml.util.Constants.TOKEN_MAX_LENGTH
 import com.summer.core.ml.util.Constants.UNKNOWN_TOKEN
 
 class WordPieceTokenizer(private val vocab: Map<String, Long>) {
+    private val unknownTokenId: Long = resolveTokenId(UNKNOWN_TOKEN, "<unk>")
+    private val paddingTokenId: Long = resolveTokenId(PADDING_TOKEN, "<pad>")
 
     private val regex = Regex(
         "(?<=\\p{L})(?=[^\\p{L}\\d])" +      // Split letters & non-letters
@@ -67,7 +69,7 @@ class WordPieceTokenizer(private val vocab: Map<String, Long>) {
                 }
                 if (!found) {
                     // No sub word found, mark as unknown and move forward to avoid infinite loop
-                    tokens.add(vocab[UNKNOWN_TOKEN]!!)
+                    tokens.add(unknownTokenId)
                     break
                 }
             }
@@ -78,11 +80,16 @@ class WordPieceTokenizer(private val vocab: Map<String, Long>) {
 
         // Add padding at the end if word tokens less that maxLength
         val paddedTokens = if (tokens.size < maxLength) {
-            tokens + List(maxLength - tokens.size) { vocab[PADDING_TOKEN]!! }
+            tokens + List(maxLength - tokens.size) { paddingTokenId }
         } else {
             tokens.take(maxLength) // Trim tokens to max length
         }
 
         return paddedTokens.toLongArray()
+    }
+
+    private fun resolveTokenId(primary: String, fallback: String): Long {
+        return vocab[primary] ?: vocab[fallback]
+        ?: error("Missing required tokenizer token: $primary or $fallback")
     }
 }

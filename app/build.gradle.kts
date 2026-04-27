@@ -23,7 +23,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.utilities.msgsense"
+        applicationId = "com.summer.notifai" // for testing
         minSdk = 28
         targetSdk = 36
         versionCode = 2
