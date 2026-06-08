@@ -37,26 +37,15 @@ class HfTokenizerBridgeTest {
         @JvmStatic
         @BeforeClass
         fun setup() {
-            val libDir = File(RUST_LIB_DIR)
-            require(libDir.exists()) {
-                "Rust library not built. Run:\n" +
-                    "  cd $RUST_LIB_DIR/.. && CARGO_TARGET_DIR=./target cargo build --release"
-            }
-            val dylibFile = File(libDir, "libhf_tokenizer_jni.dylib")
-            val soFile = File(libDir, "libhf_tokenizer_jni.so")
-            val libFile = when {
-                dylibFile.exists() -> dylibFile
-                soFile.exists() -> soFile
-                else -> error("Native lib not found in $libDir")
-            }
+            LegacyNerTestPrerequisites.requireGolden()
+            val libFile = LegacyNerTestPrerequisites.requireHostTokenizerLibrary()
             HfTokenizerBridge.loadLibraryFromPath(libFile.absolutePath)
             HfTokenizerBridge.loadTokenizer(File(TOKENIZER_PATH).absolutePath)
         }
     }
 
     private fun loadGoldenTests(): List<GoldenTestCase> {
-        val goldenFile = File("src/main/assets/banking_test_onxx/golden_test.json")
-        require(goldenFile.exists()) { "golden_test.json not found at ${goldenFile.absolutePath}" }
+        val goldenFile = LegacyNerTestPrerequisites.requireGolden()
         val type = object : TypeToken<List<GoldenTestCase>>() {}.type
         return Gson().fromJson(goldenFile.readText(), type)
     }

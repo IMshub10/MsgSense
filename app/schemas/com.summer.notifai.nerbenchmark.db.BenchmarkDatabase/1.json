@@ -1,0 +1,603 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "e1951ab230735ce94ef74893b4bcdf5f",
+    "entities": [
+      {
+        "tableName": "ner_benchmark_runs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`run_id` TEXT NOT NULL, `protocol_version` TEXT NOT NULL, `model_id` TEXT NOT NULL, `status` TEXT NOT NULL, `started_at_ms` INTEGER NOT NULL, `ended_at_ms` INTEGER, `background_verified` INTEGER NOT NULL, `model_sha256` TEXT NOT NULL, `tokenizer_sha256` TEXT NOT NULL, `fixture_sha256` TEXT NOT NULL, `golden_sha256` TEXT NOT NULL, `apk_sha256` TEXT NOT NULL, `device_id` TEXT NOT NULL, `device_fingerprint` TEXT NOT NULL, `device_model` TEXT NOT NULL, `sdk_int` INTEGER NOT NULL, `abi` TEXT NOT NULL, `measured_cases` INTEGER NOT NULL, `failures` INTEGER NOT NULL, `tokenizer_parity_failures` INTEGER NOT NULL, `entity_parity_failures` INTEGER NOT NULL, `argmax_parity_failures` INTEGER NOT NULL, `model_load_ms` REAL, `total_p50_ms` REAL, `total_p90_ms` REAL, `total_p95_ms` REAL, `total_p99_ms` REAL, `tokenizer_p50_ms` REAL, `tokenizer_p95_ms` REAL, `inference_p50_ms` REAL, `inference_p95_ms` REAL, `decode_p50_ms` REAL, `decode_p95_ms` REAL, `throughput_msgs_sec` REAL, `true_positive` INTEGER NOT NULL, `false_positive` INTEGER NOT NULL, `false_negative` INTEGER NOT NULL, `precision` REAL, `recall` REAL, `f1` REAL, `persistence_ms` REAL, `start_pss_kb` INTEGER NOT NULL, `peak_pss_kb` INTEGER, `end_pss_kb` INTEGER, `start_heap_kb` INTEGER NOT NULL, `peak_heap_kb` INTEGER, `end_heap_kb` INTEGER, `start_battery_pct` INTEGER NOT NULL, `end_battery_pct` INTEGER, `start_charge_uah` INTEGER NOT NULL, `end_charge_uah` INTEGER, `start_thermal_status` INTEGER NOT NULL, `max_thermal_status` INTEGER NOT NULL, `end_thermal_status` INTEGER, `error` TEXT, PRIMARY KEY(`run_id`))",
+        "fields": [
+          {
+            "fieldPath": "run_id",
+            "columnName": "run_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "protocol_version",
+            "columnName": "protocol_version",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "model_id",
+            "columnName": "model_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "started_at_ms",
+            "columnName": "started_at_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ended_at_ms",
+            "columnName": "ended_at_ms",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "background_verified",
+            "columnName": "background_verified",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "model_sha256",
+            "columnName": "model_sha256",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokenizer_sha256",
+            "columnName": "tokenizer_sha256",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fixture_sha256",
+            "columnName": "fixture_sha256",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "golden_sha256",
+            "columnName": "golden_sha256",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "apk_sha256",
+            "columnName": "apk_sha256",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "device_id",
+            "columnName": "device_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "device_fingerprint",
+            "columnName": "device_fingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "device_model",
+            "columnName": "device_model",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sdk_int",
+            "columnName": "sdk_int",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "abi",
+            "columnName": "abi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measured_cases",
+            "columnName": "measured_cases",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "failures",
+            "columnName": "failures",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokenizer_parity_failures",
+            "columnName": "tokenizer_parity_failures",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entity_parity_failures",
+            "columnName": "entity_parity_failures",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "argmax_parity_failures",
+            "columnName": "argmax_parity_failures",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "model_load_ms",
+            "columnName": "model_load_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "total_p50_ms",
+            "columnName": "total_p50_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "total_p90_ms",
+            "columnName": "total_p90_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "total_p95_ms",
+            "columnName": "total_p95_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "total_p99_ms",
+            "columnName": "total_p99_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tokenizer_p50_ms",
+            "columnName": "tokenizer_p50_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tokenizer_p95_ms",
+            "columnName": "tokenizer_p95_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "inference_p50_ms",
+            "columnName": "inference_p50_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "inference_p95_ms",
+            "columnName": "inference_p95_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "decode_p50_ms",
+            "columnName": "decode_p50_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "decode_p95_ms",
+            "columnName": "decode_p95_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "throughput_msgs_sec",
+            "columnName": "throughput_msgs_sec",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "true_positive",
+            "columnName": "true_positive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "false_positive",
+            "columnName": "false_positive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "false_negative",
+            "columnName": "false_negative",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "precision",
+            "columnName": "precision",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "recall",
+            "columnName": "recall",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "f1",
+            "columnName": "f1",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "persistence_ms",
+            "columnName": "persistence_ms",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "start_pss_kb",
+            "columnName": "start_pss_kb",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "peak_pss_kb",
+            "columnName": "peak_pss_kb",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "end_pss_kb",
+            "columnName": "end_pss_kb",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "start_heap_kb",
+            "columnName": "start_heap_kb",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "peak_heap_kb",
+            "columnName": "peak_heap_kb",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "end_heap_kb",
+            "columnName": "end_heap_kb",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "start_battery_pct",
+            "columnName": "start_battery_pct",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "end_battery_pct",
+            "columnName": "end_battery_pct",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "start_charge_uah",
+            "columnName": "start_charge_uah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "end_charge_uah",
+            "columnName": "end_charge_uah",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "start_thermal_status",
+            "columnName": "start_thermal_status",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "max_thermal_status",
+            "columnName": "max_thermal_status",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "end_thermal_status",
+            "columnName": "end_thermal_status",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "error",
+            "columnName": "error",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "run_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ner_benchmark_runs_model_id",
+            "unique": false,
+            "columnNames": [
+              "model_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ner_benchmark_runs_model_id` ON `${TABLE_NAME}` (`model_id`)"
+          },
+          {
+            "name": "index_ner_benchmark_runs_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ner_benchmark_runs_status` ON `${TABLE_NAME}` (`status`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "ner_benchmark_case_results",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`run_id` TEXT NOT NULL, `fixture_id` INTEGER NOT NULL, `tokenizer_ms` REAL NOT NULL, `inference_ms` REAL NOT NULL, `decode_ms` REAL NOT NULL, `total_ms` REAL NOT NULL, `tokenizer_parity` INTEGER NOT NULL, `argmax_parity` INTEGER NOT NULL, `entity_parity` INTEGER NOT NULL, `true_positive` INTEGER NOT NULL, `false_positive` INTEGER NOT NULL, `false_negative` INTEGER NOT NULL, `error` TEXT, PRIMARY KEY(`run_id`, `fixture_id`), FOREIGN KEY(`run_id`) REFERENCES `ner_benchmark_runs`(`run_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "run_id",
+            "columnName": "run_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fixture_id",
+            "columnName": "fixture_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokenizer_ms",
+            "columnName": "tokenizer_ms",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inference_ms",
+            "columnName": "inference_ms",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "decode_ms",
+            "columnName": "decode_ms",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "total_ms",
+            "columnName": "total_ms",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tokenizer_parity",
+            "columnName": "tokenizer_parity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "argmax_parity",
+            "columnName": "argmax_parity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entity_parity",
+            "columnName": "entity_parity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "true_positive",
+            "columnName": "true_positive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "false_positive",
+            "columnName": "false_positive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "false_negative",
+            "columnName": "false_negative",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "error",
+            "columnName": "error",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "run_id",
+            "fixture_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ner_benchmark_case_results_run_id",
+            "unique": false,
+            "columnNames": [
+              "run_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ner_benchmark_case_results_run_id` ON `${TABLE_NAME}` (`run_id`)"
+          },
+          {
+            "name": "index_ner_benchmark_case_results_entity_parity",
+            "unique": false,
+            "columnNames": [
+              "entity_parity"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ner_benchmark_case_results_entity_parity` ON `${TABLE_NAME}` (`entity_parity`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "ner_benchmark_runs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "run_id"
+            ],
+            "referencedColumns": [
+              "run_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "ner_benchmark_entities",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`run_id` TEXT NOT NULL, `fixture_id` INTEGER NOT NULL, `expected` INTEGER NOT NULL, `entity_type` TEXT NOT NULL, `text` TEXT NOT NULL, `start_token` INTEGER NOT NULL, `end_token` INTEGER NOT NULL, PRIMARY KEY(`run_id`, `fixture_id`, `expected`, `entity_type`, `start_token`, `end_token`, `text`), FOREIGN KEY(`run_id`) REFERENCES `ner_benchmark_runs`(`run_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "run_id",
+            "columnName": "run_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fixture_id",
+            "columnName": "fixture_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expected",
+            "columnName": "expected",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entity_type",
+            "columnName": "entity_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "start_token",
+            "columnName": "start_token",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "end_token",
+            "columnName": "end_token",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "run_id",
+            "fixture_id",
+            "expected",
+            "entity_type",
+            "start_token",
+            "end_token",
+            "text"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ner_benchmark_entities_run_id",
+            "unique": false,
+            "columnNames": [
+              "run_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ner_benchmark_entities_run_id` ON `${TABLE_NAME}` (`run_id`)"
+          },
+          {
+            "name": "index_ner_benchmark_entities_fixture_id",
+            "unique": false,
+            "columnNames": [
+              "fixture_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ner_benchmark_entities_fixture_id` ON `${TABLE_NAME}` (`fixture_id`)"
+          },
+          {
+            "name": "index_ner_benchmark_entities_entity_type",
+            "unique": false,
+            "columnNames": [
+              "entity_type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ner_benchmark_entities_entity_type` ON `${TABLE_NAME}` (`entity_type`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "ner_benchmark_runs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "run_id"
+            ],
+            "referencedColumns": [
+              "run_id"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e1951ab230735ce94ef74893b4bcdf5f')"
+    ]
+  }
+}

@@ -16,7 +16,7 @@ constraintlayout = "2.2.1"
 hiltVersion = "2.50"
 navigationUiKtx = "2.8.9"
 onnxruntime = "1.24.3"
-onnxruntimeAndroidVersion = "latest.release"
+onnxruntimeAndroidVersion = "1.24.3"
 tensorflowLite = "2.16.1"
 opennlpTools = "1.9.3"
 pagingRuntimeKtx = "3.3.6"
@@ -54,6 +54,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomRuntime" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

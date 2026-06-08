@@ -36,21 +36,19 @@ class BankingOnnxArgmaxTest {
         private lateinit var ortEnv: OrtEnvironment
         private lateinit var ortSession: OrtSession
         private lateinit var tempDir: File
+        private var initialized = false
 
         @JvmStatic
         @BeforeClass
         fun setup() {
+            LegacyNerTestPrerequisites.requireGolden()
+            val (modelSrc, dataSrc) = LegacyNerTestPrerequisites.requireModelFiles()
             ortEnv = OrtEnvironment.getEnvironment()
 
             // ONNX external data requires both files in the same directory,
             // loaded by file path (not byte buffer).
             tempDir = File(System.getProperty("java.io.tmpdir"), "banking_onnx_test")
             tempDir.mkdirs()
-
-            val modelSrc = File(ASSET_DIR, "model.onnx")
-            val dataSrc = File(ASSET_DIR, "model.onnx.data")
-            require(modelSrc.exists()) { "model.onnx not found at ${modelSrc.absolutePath}" }
-            require(dataSrc.exists()) { "model.onnx.data not found at ${dataSrc.absolutePath}" }
 
             val modelDst = File(tempDir, "model.onnx")
             val dataDst = File(tempDir, "model.onnx.data")
@@ -59,11 +57,13 @@ class BankingOnnxArgmaxTest {
 
             val opts = OrtSession.SessionOptions()
             ortSession = ortEnv.createSession(modelDst.absolutePath, opts)
+            initialized = true
         }
 
         @JvmStatic
         @AfterClass
         fun teardown() {
+            if (!initialized) return
             ortSession.close()
             ortEnv.close()
             tempDir.deleteRecursively()
@@ -71,8 +71,7 @@ class BankingOnnxArgmaxTest {
     }
 
     private fun loadGoldenTests(): List<GoldenTestCase> {
-        val goldenFile = File("$ASSET_DIR/golden_test.json")
-        require(goldenFile.exists()) { "golden_test.json not found at ${goldenFile.absolutePath}" }
+        val goldenFile = LegacyNerTestPrerequisites.requireGolden()
         val type = object : TypeToken<List<GoldenTestCase>>() {}.type
         return Gson().fromJson(goldenFile.readText(), type)
     }

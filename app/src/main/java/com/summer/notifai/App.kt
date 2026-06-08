@@ -2,7 +2,6 @@ package com.summer.notifai
 
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.airbnb.lottie.BuildConfig
 import com.summer.core.BaseApp
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -23,4 +22,3 @@ class App : BaseApp(), Configuration.Provider {
             .setWorkerFactory(workerFactory)
             .build()
 }
-

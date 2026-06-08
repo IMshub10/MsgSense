@@ -44,34 +44,32 @@ class BankingEndToEndTest {
         private lateinit var ortEnv: OrtEnvironment
         private lateinit var ortSession: OrtSession
         private lateinit var tempDir: File
+        private var initialized = false
 
         @JvmStatic
         @BeforeClass
         fun setup() {
-            val libDir = File(RUST_LIB_DIR)
-            val dylibFile = File(libDir, "libhf_tokenizer_jni.dylib")
-            val soFile = File(libDir, "libhf_tokenizer_jni.so")
-            val libFile = when {
-                dylibFile.exists() -> dylibFile
-                soFile.exists() -> soFile
-                else -> error("Native lib not found in $libDir")
-            }
+            LegacyNerTestPrerequisites.requireGolden()
+            val libFile = LegacyNerTestPrerequisites.requireHostTokenizerLibrary()
+            val (model, modelData) = LegacyNerTestPrerequisites.requireModelFiles()
             HfTokenizerBridge.loadLibraryFromPath(libFile.absolutePath)
             HfTokenizerBridge.loadTokenizer(File(TOKENIZER_PATH).absolutePath)
 
             ortEnv = OrtEnvironment.getEnvironment()
             tempDir = File(System.getProperty("java.io.tmpdir"), "banking_e2e_test")
             tempDir.mkdirs()
-            File(ASSET_DIR, "model.onnx").copyTo(File(tempDir, "model.onnx"), overwrite = true)
-            File(ASSET_DIR, "model.onnx.data").copyTo(File(tempDir, "model.onnx.data"), overwrite = true)
+            model.copyTo(File(tempDir, "model.onnx"), overwrite = true)
+            modelData.copyTo(File(tempDir, "model.onnx.data"), overwrite = true)
             ortSession = ortEnv.createSession(
                 File(tempDir, "model.onnx").absolutePath, OrtSession.SessionOptions()
             )
+            initialized = true
         }
 
         @JvmStatic
         @AfterClass
         fun teardown() {
+            if (!initialized) return
             ortSession.close()
             ortEnv.close()
             tempDir.deleteRecursively()
@@ -79,8 +77,7 @@ class BankingEndToEndTest {
     }
 
     private fun loadGoldenTests(): List<GoldenTestCase> {
-        val goldenFile = File("$ASSET_DIR/golden_test.json")
-        require(goldenFile.exists()) { "golden_test.json not found" }
+        val goldenFile = LegacyNerTestPrerequisites.requireGolden()
         val type = object : TypeToken<List<GoldenTestCase>>() {}.type
         return Gson().fromJson(goldenFile.readText(), type)
     }

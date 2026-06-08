@@ -23,8 +23,7 @@ class BankingBioDecoderTest {
     )
 
     private fun loadGoldenTests(): List<GoldenTestCase> {
-        val goldenFile = File("src/main/assets/banking_test_onxx/golden_test.json")
-        require(goldenFile.exists()) { "golden_test.json not found at ${goldenFile.absolutePath}" }
+        val goldenFile = LegacyNerTestPrerequisites.requireGolden()
         val type = object : TypeToken<List<GoldenTestCase>>() {}.type
         return Gson().fromJson(goldenFile.readText(), type)
     }
