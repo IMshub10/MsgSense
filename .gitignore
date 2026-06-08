@@ -29,6 +29,13 @@ app/src/main/jniLibs/
 app/src/main/assets/banking_test_onxx/golden_test.json
 app/src/main/assets/banking_test_tflite/golden_test.json
 
+# Generated NER v50 benchmark assets and host-side results
+app/src/albertV50/assets/ner_benchmark/
+app/src/bertBaseV50/assets/ner_benchmark/
+app/src/distilbertV50/assets/ner_benchmark/
+app/src/mobilebertV50/assets/ner_benchmark/
+benchmark-results/
+
 # Kotlin / Gradle caches
 .kotlin/
 
@@ -37,4 +44,5 @@ app/src/main/assets/banking_test_tflite/golden_test.json
 
 .idea
 /app/src/google-services.json
+/app/google-services.json
 .cursor
