@@ -15,6 +15,7 @@ import com.summer.core.android.sms.model.SmsProcessingError
 import com.summer.core.android.sms.model.SmsProcessingStatus
 import com.summer.core.domain.model.SmsBatchResult
 import com.summer.core.domain.repository.ISmsRepository
+import com.summer.core.ner.NerScheduler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -23,7 +24,8 @@ class SmsProcessingWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val repository: ISmsRepository,
-    private val appNotificationManager: AppNotificationManager
+    private val appNotificationManager: AppNotificationManager,
+    private val nerScheduler: NerScheduler,
 ) : CoroutineWorker(appContext, workerParams) {
 
     private var retryAttempt = 0
@@ -103,6 +105,7 @@ class SmsProcessingWorker @AssistedInject constructor(
         return when(finalResult){
             is SmsBatchResult.Success -> {
                 repository.setSmsProcessingStatusCompleted(true)
+                nerScheduler.enqueueBackfill()
                 setProgress(workDataOf(SmsProcessingStatus.STATUS_KEY to SmsProcessingStatus.Success.key))
                 Result.success()
             }

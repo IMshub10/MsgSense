@@ -118,22 +118,25 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
         val modelInputs = mutableMapOf<String, OnnxTensor>(
             INPUT_IDS to inputTensor, ATTENTION_MASK to attentionTensor
         )
-        val results = ortSession.run(modelInputs)
+        return try {
+            ortSession.run(modelInputs).use { results ->
+                val logits = (results[0].value as Array<FloatArray>)[0]
+                val probabilities = softmax(logits)
+                val maxIndex = probabilities.indices.maxByOrNull { probabilities[it] }!!
+                val predictedLabel = labelMap[maxIndex] ?: "Unknown"
+                val confidenceScore = probabilities[maxIndex].roundToTwoDecimalPlaces()
 
-        val logits = (results[0].value as Array<FloatArray>)[0]
-        val probabilities = softmax(logits)
-
-        val maxIndex = probabilities.indices.maxByOrNull { probabilities[it] }!!
-        val predictedLabel = labelMap[maxIndex] ?: "Unknown"
-        val confidenceScore = probabilities[maxIndex].roundToTwoDecimalPlaces()
-
-        return SmsClassifierOutputModel(
-            importanceScore = predictedLabel.first().digitToIntOrNull() ?: 0,
-            smsClassificationTypeId = predictedLabel.takeLast(2).toInt(),
-            confidenceScore = confidenceScore,
-            smsClassTypeId = predictedLabel[1].digitToIntOrNull() ?: 0,
-            smsSubClassTypeId = predictedLabel[2].digitToIntOrNull() ?: 0
-        )
+                SmsClassifierOutputModel(
+                    importanceScore = predictedLabel.first().digitToIntOrNull() ?: 0,
+                    smsClassificationTypeId = predictedLabel.takeLast(2).toInt(),
+                    confidenceScore = confidenceScore,
+                    smsClassTypeId = predictedLabel[1].digitToIntOrNull() ?: 0,
+                    smsSubClassTypeId = predictedLabel[2].digitToIntOrNull() ?: 0
+                )
+            }
+        } finally {
+            modelInputs.values.forEach(OnnxTensor::close)
+        }
     }
 
     /**

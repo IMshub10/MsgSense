@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="64dp"
+            android:paddingHorizontal="@dimen/spacing_small"
+            android:paddingVertical="@dimen/spacing_x_small"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/back"
+                android:layout_width="@dimen/spacing_x_large"
+                android:layout_height="@dimen/spacing_x_large"
+                android:background="@drawable/ripple_color_grey_oval"
+                android:contentDescription="@string/back"
+                android:padding="@dimen/spacing_x_small"
+                android:src="@drawable/ic_back_24x24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                style="@style/text_title_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_small"
+                android:text="@string/transaction_details"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/edit"
+                app:layout_constraintStart_toEndOf="@id/back"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/edit"
+                style="@style/AppTextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/edit"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/header">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/spacing_x_medium"
+                android:paddingTop="@dimen/spacing_medium"
+                android:paddingBottom="@dimen/spacing_large">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="@dimen/spacing_huge"
+                    android:layout_height="@dimen/spacing_huge"
+                    android:layout_gravity="center_horizontal"
+                    app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                    app:cardCornerRadius="@dimen/spacing_large"
+                    app:cardElevation="0dp">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="@dimen/spacing_x_medium"
+                        android:src="@drawable/ic_wallet_24x24"
+                        app:tint="?attr/colorOnPrimaryContainer" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/merchant"
+                    style="@style/text_body_secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_small"
+                    android:gravity="center"
+                    tools:text="Synthetic Store" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/amount"
+                    style="@style/text_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    tools:text="-₹1,250" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/review_state"
+                    style="@style/AppChoiceChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/spacing_x_small"
+                    android:clickable="false"
+                    android:focusable="false"
+                    tools:text="AI extracted" />
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/AppCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_medium">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_x_medium">
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            style="@style/text_caption_secondary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/category" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/category"
+                            style="@style/text_body_bold"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Shopping" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginVertical="@dimen/spacing_small"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            style="@style/text_caption_secondary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/payment_method" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/payment"
+                            style="@style/text_body_bold"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Card" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginVertical="@dimen/spacing_small"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            style="@style/text_caption_secondary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/timestamp" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/timestamp"
+                            style="@style/text_body_bold"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Jun 9, 2026 10:30 AM" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginVertical="@dimen/spacing_small"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            style="@style/text_caption_secondary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/bank_and_account" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/bank"
+                            style="@style/text_body_bold"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Example Bank • ••••1234" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/text_caption_secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_medium"
+                    android:text="@string/original_sms" />
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/AppCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_x_small">
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/original_sms"
+                        style="@style/text_body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="@dimen/spacing_x_medium"
+                        android:textIsSelectable="false"
+                        tools:text="Synthetic local-only transaction fixture." />
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

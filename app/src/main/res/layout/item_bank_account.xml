@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools">
+    <com.google.android.material.card.MaterialCardView
+        style="@style/AppCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/spacing_tiny"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:padding="@dimen/spacing_medium">
+            <ImageView android:id="@+id/logo" android:layout_width="48dp" android:layout_height="48dp" android:contentDescription="@string/bank_logo" android:scaleType="centerInside" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/spacing_medium" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:id="@+id/name" style="@style/text_body_bold" android:layout_width="match_parent" android:layout_height="wrap_content" tools:text="HDFC Bank account"/>
+                <TextView android:id="@+id/identifier" style="@style/text_caption_secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/spacing_tiny" tools:text="Account • ••••1234"/>
+                <TextView android:id="@+id/balance_age" style="@style/text_caption_secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/spacing_tiny" tools:text="May be outdated"/>
+                <TextView android:id="@+id/monthly_totals" style="@style/text_caption_secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/spacing_tiny" tools:text="This month: Debit ₹1,000 • Credit ₹2,000"/>
+            </LinearLayout>
+            <TextView android:id="@+id/reported_balance" style="@style/text_body_bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/spacing_small" tools:text="₹12,345"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</layout>

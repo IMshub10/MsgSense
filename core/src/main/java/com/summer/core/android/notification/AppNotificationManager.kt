@@ -4,9 +4,11 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.util.Log
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.summer.core.R
+import com.summer.core.data.local.entities.SmsNerEntity
 import com.summer.core.data.local.entities.SmsEntity
 import com.summer.core.di.ChatSessionTracker
 import com.summer.core.ui.model.SmsImportanceType
@@ -37,7 +39,11 @@ class AppNotificationManager @Inject constructor(
                 channelType.importance
             ).apply {
                 description = channelType.description
-                if (channelType == NotificationChannelType.SUMMARY) {
+                if (channelType in setOf(
+                        NotificationChannelType.SUMMARY,
+                        NotificationChannelType.BANKING_TRANSACTIONS,
+                    )
+                ) {
                     setSound(null, null)
                     enableVibration(false)
                 }
@@ -97,12 +103,66 @@ class AppNotificationManager @Inject constructor(
             .setPriority(channelType.importance)
             .setAutoCancel(true)
             .build()
-        Log.d(
-            "NotificationDebug",
-            "Notifying for sms.androidSmsId= ${sms.androidSmsId}, body= ${sms.body}"
-        )
         notificationManager?.notify(sms.androidSmsId, notification)
     }
+
+    fun canShowBankingNotifications(): Boolean {
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true
+        val channel = notificationManager
+            ?.getNotificationChannel(NotificationChannelType.BANKING_TRANSACTIONS.channelId)
+            ?: return false
+        return channel.importance != NotificationManager.IMPORTANCE_NONE
+    }
+
+    fun createBankingProgressNotification(): Notification =
+        NotificationCompat.Builder(context, NotificationChannelType.BANKING_TRANSACTIONS.channelId)
+            .setSmallIcon(R.drawable.ic_sms_sync_24x24)
+            .setContentTitle("Banking transaction")
+            .setContentText("Analyzing banking transaction...")
+            .setContentIntent(notificationIntentProvider.provideAppHomePendingIntent())
+            .setOngoing(true)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(genericBankingNotification())
+            .build()
+
+    fun showBankingResultNotification(
+        notificationId: Int,
+        extractionId: Long,
+        entities: List<SmsNerEntity>,
+    ) {
+        val notification = NotificationCompat.Builder(
+            context,
+            NotificationChannelType.BANKING_TRANSACTIONS.channelId,
+        )
+            .setSmallIcon(R.drawable.ic_sms_sync_24x24)
+            .setContentTitle("Banking transaction")
+            .setContentText(BankingNotificationContent.from(entities))
+            .setContentIntent(notificationIntentProvider.provideBankingTransactionPendingIntent(extractionId))
+            .setAutoCancel(true)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(genericBankingNotification())
+            .build()
+        notificationManager?.notify(notificationId, notification)
+    }
+
+    fun cancelBankingNotification(notificationId: Int) {
+        notificationManager?.cancel(notificationId)
+    }
+
+    private fun genericBankingNotification(): Notification =
+        NotificationCompat.Builder(context, NotificationChannelType.BANKING_TRANSACTIONS.channelId)
+            .setSmallIcon(R.drawable.ic_sms_sync_24x24)
+            .setContentTitle("Banking transaction")
+            .setContentText("Open MsgSense to view details")
+            .setSilent(true)
+            .build()
 
     fun clearNotificationForSender(androidSmsIds: List<Long>) {
         androidSmsIds.forEach {

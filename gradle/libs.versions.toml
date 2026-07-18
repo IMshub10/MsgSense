@@ -31,6 +31,8 @@ activity = "1.8.0"
 hiltCommon = "1.2.0"
 workRuntimeKtx = "2.10.2"
 hiltWork = "1.2.0"
+roborazzi = "1.59.0"
+robolectric = "4.16.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 kotlinxSerializationJson = "1.6.3"
@@ -80,6 +82,8 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 
 # Networking
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
@@ -106,3 +110,4 @@ google-gms-google-services = { id = "com.google.gms.google-services", version.re
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
 android-test = { id = "com.android.test", version.ref = "agp" }
 baselineprofile = { id = "androidx.baselineprofile", version.ref = "benchmarkMacroJunit4" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

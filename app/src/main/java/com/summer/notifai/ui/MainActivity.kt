@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
+import android.view.WindowManager
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -72,6 +73,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             .findFragmentById(R.id.fcv_main_navHost) as? NavHostFragment
         navController = navHostFragment?.navController
             ?: throw IllegalStateException("NavController is null")
+        navController?.addOnDestinationChangedListener { _, destination, _ ->
+            val secure = destination.id in setOf(
+                R.id.bankingHomeFrag,
+                R.id.accountDetailFrag,
+                R.id.transactionListFrag,
+                R.id.transactionDetailFrag,
+                R.id.transactionEditFrag,
+            )
+            if (secure) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        }
     }
 
     /**
@@ -135,4 +150,3 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         startActivity(intent)
     }
 }
-

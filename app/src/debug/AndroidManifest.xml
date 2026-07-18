@@ -1,15 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application>
-        <activity
-            android:name=".nerbenchmark.NerBenchmarkLaunchActivity"
-            android:exported="true" />
-        <receiver
-            android:name=".nerbenchmark.NerBenchmarkReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.utilities.msgsense.action.RUN_NER_BENCHMARK" />
-            </intent-filter>
-        </receiver>
-    </application>
-</manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

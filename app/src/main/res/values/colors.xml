@@ -11,6 +11,8 @@
 
     <color name="blue_link">#448AFF</color>
     <color name="primary">#3A63DE</color>
+    <color name="primary_container">#DCE5FF</color>
+    <color name="on_primary_container">#102A73</color>
     <color name="primaryDark">#121624</color>
     <color name="primaryLight">#DCE5FD</color>
 
@@ -49,6 +51,18 @@
 
     <color name="background_light">#F5F8FF</color>
     <color name="background_dark">#2B364A</color>
+    <color name="surface_light">#FBFCFF</color>
+    <color name="surface_dark">#111318</color>
+    <color name="surface_variant_light">#E2E7F3</color>
+    <color name="surface_variant_dark">#424650</color>
+    <color name="on_surface_light">#1A1B20</color>
+    <color name="on_surface_dark">#E3E2E9</color>
+    <color name="on_surface_variant_light">#444650</color>
+    <color name="on_surface_variant_dark">#C4C6D0</color>
+    <color name="outline_light">#757780</color>
+    <color name="outline_dark">#8E9099</color>
+    <color name="outline_variant_light">#C5C6D0</color>
+    <color name="outline_variant_dark">#444650</color>
     <color name="circle_background_light">#E3E9FC</color>
     <color name="circle_background_dark">#3A63DE</color>
     <color name="charcoal">#333333</color>

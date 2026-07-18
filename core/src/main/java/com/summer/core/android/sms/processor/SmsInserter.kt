@@ -99,7 +99,7 @@ class SmsInserter @Inject constructor(
         } catch (e: Exception) {
             Log.w(
                 "classifySms",
-                "Error classifying SMS with address: ${sms.rawAddress}, body: ${sms.body}",
+                "Error classifying incoming SMS",
                 e
             )
             FirebaseCrashlytics.getInstance().recordException(e)

@@ -250,7 +250,7 @@ class SmsBatchProcessor @Inject constructor(
                     confidenceScore = classification.confidenceScore
                 )
             } catch (e: Exception) {
-                Log.w(tag, "Error classifying SMS from ${sms.rawAddress}", e)
+                Log.w(tag, "Error classifying SMS", e)
                 FirebaseCrashlytics.getInstance().recordException(e)
                 sms
             }

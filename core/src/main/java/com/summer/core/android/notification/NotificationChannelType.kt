@@ -43,5 +43,11 @@ enum class NotificationChannelType(
         "SMS Processing",
         NotificationManager.IMPORTANCE_MIN,
         "Service notification for SMS processing status."
+    ),
+    BANKING_TRANSACTIONS(
+        "banking_transactions",
+        "Banking Transactions",
+        NotificationManager.IMPORTANCE_LOW,
+        "Silent banking transaction analysis and result notifications."
     );
 }

@@ -24,13 +24,13 @@
             android:layout_marginVertical="@dimen/spacing_small"
             android:layout_marginStart="@dimen/spacing_small"
             android:background="@drawable/shape_circle_color_surface"
-            android:backgroundTint="?colorOnSecondary"
+            android:backgroundTint="?attr/colorPrimaryContainer"
             android:padding="@dimen/spacing_x_small"
             app:layout_constraintBottom_toBottomOf="@+id/separator"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_contact_24x24"
-            app:tint="?colorOnPrimary" />
+            app:tint="?attr/colorOnPrimaryContainer" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tv_itemNewContact_senderName"
@@ -57,7 +57,7 @@
             android:ellipsize="end"
             android:lines="1"
             android:text="@{model.phoneNumber}"
-            android:textColor="?colorOnPrimary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="13sp"
             app:layout_constraintBottom_toBottomOf="@+id/iv_itemNewContact_icon"
             app:layout_constraintEnd_toEndOf="parent"
@@ -70,7 +70,7 @@
             android:layout_width="0dp"
             android:layout_height="0.5dp"
             android:layout_marginTop="@dimen/spacing_tiny"
-            android:background="?colorOnPrimary"
+            android:background="?attr/colorOutlineVariant"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@+id/tv_itemNewContact_senderAddress" />

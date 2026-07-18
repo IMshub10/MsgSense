@@ -46,3 +46,9 @@ benchmark-results/
 /app/src/google-services.json
 /app/google-services.json
 .cursor
+
+# Roborazzi generated comparisons. Synthetic baselines under app/src/test/snapshots stay tracked.
+**/build/outputs/roborazzi/
+**/build/test-results/roborazzi/
+**/build/reports/roborazzi/
+**/build/outputs/roborazzi-comparison/

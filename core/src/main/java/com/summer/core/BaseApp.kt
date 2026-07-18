@@ -33,10 +33,14 @@ abstract class BaseApp : Application(){
 
     override fun onCreate() {
         super.onCreate()
+        if (!isMainProcess()) return
         appNotificationManager.createNotificationChannels()
         setUpSyncContacts()
         registerSentSmsReceiver()
     }
+
+    protected fun isMainProcess(): Boolean =
+        Application.getProcessName() == packageName
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun registerSentSmsReceiver() {

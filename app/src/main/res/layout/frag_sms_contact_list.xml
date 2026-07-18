@@ -18,7 +18,7 @@
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
+            android:background="?attr/colorSurface">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
@@ -56,9 +56,24 @@
                         android:layout_marginEnd="@dimen/spacing_x_medium"
                         android:background="@drawable/ripple_color_grey_oval"
                         android:padding="@dimen/spacing_x_small"
+                        app:layout_constraintEnd_toStartOf="@+id/iv_fragContactList_transactions"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_search_24x24"
+                        app:tint="?attr/colorOnSurface" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/iv_fragContactList_transactions"
+                        android:layout_width="@dimen/spacing_x_large"
+                        android:layout_height="@dimen/spacing_x_large"
+                        android:layout_marginTop="@dimen/spacing_small"
+                        android:layout_marginEnd="@dimen/spacing_x_small"
+                        android:background="@drawable/ripple_color_grey_oval"
+                        android:contentDescription="@string/transactions"
+                        android:padding="@dimen/spacing_x_small"
                         app:layout_constraintEnd_toStartOf="@+id/iv_fragContactList_more"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_search_24x24" />
+                        app:srcCompat="@drawable/ic_wallet_24x24"
+                        app:tint="?attr/colorOnSurface" />
 
                     <!-- More Icon -->
                     <androidx.appcompat.widget.AppCompatImageView
@@ -71,7 +86,8 @@
                         android:padding="@dimen/spacing_x_small"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_more_vert_24x24" />
+                        app:srcCompat="@drawable/ic_more_vert_24x24"
+                        app:tint="?attr/colorOnSurface" />
 
                     <!-- ChipGroup -->
                     <com.google.android.material.chip.ChipGroup
@@ -88,21 +104,17 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipImportant"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            style="@style/AppChoiceChip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/important"
-                            android:textColor="@drawable/chip_text_color_selector"
-                            app:chipBackgroundColor="@drawable/chip_background_selector" />
+                            android:text="@string/important" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipOthers"
-                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            style="@style/AppChoiceChip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/others"
-                            android:textColor="@drawable/chip_text_color_selector"
-                            app:chipBackgroundColor="@drawable/chip_background_selector" />
+                            android:text="@string/others" />
                     </com.google.android.material.chip.ChipGroup>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
