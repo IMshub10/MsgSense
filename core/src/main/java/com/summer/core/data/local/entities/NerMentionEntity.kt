@@ -7,22 +7,25 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = SmsNerEntity.TABLE_NAME,
+    tableName = NerMentionEntity.TABLE_NAME,
     foreignKeys = [
         ForeignKey(
-            entity = SmsNerExtractionEntity::class,
+            entity = NerRunEntity::class,
             parentColumns = ["id"],
-            childColumns = ["extraction_id"],
+            childColumns = ["run_id"],
             onDelete = ForeignKey.CASCADE,
         )
     ],
-    indices = [Index("extraction_id"), Index("entity_type")],
+    indices = [
+        Index("run_id"),
+        Index(value = ["run_id", "entity_type", "entity_order"]),
+    ],
 )
-data class SmsNerEntity(
+data class NerMentionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    @ColumnInfo(name = "extraction_id")
-    val extractionId: Long,
+    @ColumnInfo(name = "run_id")
+    val runId: Long,
     @ColumnInfo(name = "entity_order")
     val entityOrder: Int,
     @ColumnInfo(name = "entity_type")
@@ -37,6 +40,6 @@ data class SmsNerEntity(
     val endOffset: Int,
 ) {
     companion object {
-        const val TABLE_NAME = "sms_ner_entities"
+        const val TABLE_NAME = "ner_mentions"
     }
 }

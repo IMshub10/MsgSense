@@ -9,7 +9,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.summer.core.android.notification.AppNotificationManager
 import com.summer.core.data.local.dao.NerDao
-import com.summer.core.data.local.entities.SmsNerEntity
+import com.summer.core.data.local.entities.NerMentionEntity
 import com.summer.core.data.local.model.PendingNerSms
 import com.summer.core.ner.NerConstants
 import com.summer.core.banking.BankAccountOrganizer
@@ -61,10 +61,10 @@ class NerCoordinatorWorker @AssistedInject constructor(
                 client.extract(pending.smsId, pending.rawAddress, pending.body)
             }
             dao.complete(
-                extractionId = pending.extractionId,
-                entities = result.entities.mapIndexed { index, entity ->
-                    SmsNerEntity(
-                        extractionId = pending.extractionId,
+                runId = pending.extractionId,
+                mentions = result.entities.mapIndexed { index, entity ->
+                    NerMentionEntity(
+                        runId = pending.extractionId,
                         entityOrder = index,
                         entityType = entity.type,
                         rawText = entity.rawText,
@@ -83,6 +83,10 @@ class NerCoordinatorWorker @AssistedInject constructor(
                 notificationState = if (notificationVisible) NerConstants.NOTIFICATION_STATE_READY
                 else NerConstants.NOTIFICATION_STATE_SUPPRESSED,
                 now = System.currentTimeMillis(),
+                pipelineFingerprint = result.pipelineFingerprint,
+                labelSchemaSha256 = result.labelSchemaSha256,
+                decoderVersion = result.decoderVersion,
+                normalizerVersion = result.normalizerVersion,
             )
             accountOrganizer.organizePending()
             if (notificationVisible) {
@@ -169,7 +173,7 @@ class NerCoordinatorWorker @AssistedInject constructor(
     }
 
     private suspend fun processBackfill(): Result {
-        dao.enqueueMissingBackfill(System.currentTimeMillis())
+        dao.enqueueMissingBackfill(NerPipelineMetadata.PIPELINE_FINGERPRINT, System.currentTimeMillis())
         val client = NerServiceClient(appContext)
         val started = System.currentTimeMillis()
         var processed = 0
@@ -184,10 +188,10 @@ class NerCoordinatorWorker @AssistedInject constructor(
                 try {
                     val result = client.extract(pending.smsId, pending.rawAddress, pending.body)
                     dao.complete(
-                        pending.extractionId,
-                        result.entities.mapIndexed { index, entity ->
-                            SmsNerEntity(
-                                extractionId = pending.extractionId,
+                        runId = pending.extractionId,
+                        mentions = result.entities.mapIndexed { index, entity ->
+                            NerMentionEntity(
+                                runId = pending.extractionId,
                                 entityOrder = index,
                                 entityType = entity.type,
                                 rawText = entity.rawText,
@@ -196,10 +200,19 @@ class NerCoordinatorWorker @AssistedInject constructor(
                                 endOffset = entity.endOffset,
                             )
                         },
-                        result.modelId, result.modelSha256, result.tokenizerSha256,
-                        result.preprocessingVersion, result.tokenCount, result.truncated,
-                        result.inferenceMs, NerConstants.NOTIFICATION_STATE_NONE,
-                        System.currentTimeMillis(),
+                        modelId = result.modelId,
+                        modelSha256 = result.modelSha256,
+                        tokenizerSha256 = result.tokenizerSha256,
+                        preprocessingVersion = result.preprocessingVersion,
+                        tokenCount = result.tokenCount,
+                        truncated = result.truncated,
+                        inferenceMs = result.inferenceMs,
+                        notificationState = NerConstants.NOTIFICATION_STATE_NONE,
+                        now = System.currentTimeMillis(),
+                        pipelineFingerprint = result.pipelineFingerprint,
+                        labelSchemaSha256 = result.labelSchemaSha256,
+                        decoderVersion = result.decoderVersion,
+                        normalizerVersion = result.normalizerVersion,
                     )
                     accountOrganizer.organizePending()
                 } catch (cancelled: CancellationException) {

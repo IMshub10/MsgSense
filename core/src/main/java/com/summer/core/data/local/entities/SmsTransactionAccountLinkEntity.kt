@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
     tableName = SmsTransactionAccountLinkEntity.TABLE_NAME,
     foreignKeys = [
         ForeignKey(
-            entity = SmsNerExtractionEntity::class,
+            entity = NerRunEntity::class,
             parentColumns = ["id"],
             childColumns = ["extraction_id"],
             onDelete = ForeignKey.CASCADE,

@@ -7,22 +7,22 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = SmsTransactionOverrideEntity.TABLE_NAME,
+    tableName = BankingTransactionOverrideEntity.TABLE_NAME,
     foreignKeys = [
         ForeignKey(
-            entity = SmsNerExtractionEntity::class,
+            entity = NerRunEntity::class,
             parentColumns = ["id"],
-            childColumns = ["extraction_id"],
+            childColumns = ["run_id"],
             onDelete = ForeignKey.CASCADE,
         )
     ],
-    indices = [Index(value = ["extraction_id"], unique = true)],
+    indices = [Index(value = ["run_id"], unique = true)],
 )
-data class SmsTransactionOverrideEntity(
+data class BankingTransactionOverrideEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    @ColumnInfo(name = "extraction_id")
-    val extractionId: Long,
+    @ColumnInfo(name = "run_id")
+    val runId: Long,
     val merchant: String,
     val amount: String,
     val currency: String,
@@ -38,6 +38,6 @@ data class SmsTransactionOverrideEntity(
     val updatedAt: Long,
 ) {
     companion object {
-        const val TABLE_NAME = "sms_transaction_overrides"
+        const val TABLE_NAME = "banking_transaction_overrides"
     }
 }

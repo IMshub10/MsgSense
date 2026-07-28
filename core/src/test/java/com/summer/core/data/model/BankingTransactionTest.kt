@@ -1,6 +1,6 @@
 package com.summer.core.data.model
 
-import com.summer.core.data.local.model.TransactionProjection
+import com.summer.core.data.local.model.BankingTransactionRow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -76,22 +76,22 @@ class BankingTransactionTest {
         overrideCategory: String? = null,
         overridePaymentMethod: String? = null,
         overrideReviewState: String? = null,
-    ) = TransactionProjection(
-        extractionId = 1,
+    ) = BankingTransactionRow(
+        runId = 1,
         smsId = 2,
         senderAddressId = 3,
         smsBody = "Synthetic test message",
         smsDate = 1_700_000_000_000,
-        rawMerchant = rawMerchant,
-        rawAmount = rawAmount,
-        normalizedAmount = normalizedAmount,
-        rawDirection = normalizedDirection,
-        normalizedDirection = normalizedDirection,
+        merchant = rawMerchant,
+        amount = normalizedAmount,
+        currency = BankingTransaction.detectCurrency(rawAmount),
+        direction = normalizedDirection,
         bank = "Test Bank",
         account = account,
         txnType = txnType,
         cardType = null,
         truncated = false,
+        reviewState = null,
         overrideMerchant = overrideMerchant,
         overrideAmount = overrideAmount,
         overrideCurrency = overrideCurrency,

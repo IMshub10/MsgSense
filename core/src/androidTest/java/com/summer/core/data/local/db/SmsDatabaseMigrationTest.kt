@@ -34,15 +34,21 @@ class SmsDatabaseMigrationTest {
                 SmsDatabase.MIGRATION_2_3,
                 SmsDatabase.MIGRATION_3_4,
                 SmsDatabase.MIGRATION_4_5,
+                SmsDatabase.MIGRATION_5_6,
             )
             .build()
         val sqlite = database.openHelper.writableDatabase
 
         assertEquals("existing body", database.smsDao().getSmsEntityById(1)?.body)
-        assertTrue(sqlite.hasTable("sms_ner_extractions"))
-        assertTrue(sqlite.hasTable("sms_ner_entities"))
-        assertTrue(sqlite.hasColumn("sms_ner_extractions", "notification_state"))
-        assertTrue(sqlite.hasTable("sms_transaction_overrides"))
+        assertTrue(sqlite.hasTable("ner_runs"))
+        assertTrue(sqlite.hasTable("ner_mentions"))
+        assertTrue(sqlite.hasTable("ner_run_metadata"))
+        assertTrue(sqlite.hasTable("banking_transaction_facts"))
+        assertTrue(sqlite.hasTable("banking_transaction_overrides"))
+        assertTrue(sqlite.hasTable("banking_ner_notifications"))
+        assertTrue(!sqlite.hasTable("sms_ner_extractions"))
+        assertTrue(!sqlite.hasTable("sms_ner_entities"))
+        assertTrue(!sqlite.hasTable("sms_transaction_overrides"))
         assertTrue(sqlite.hasTable("bank_accounts"))
         assertTrue(sqlite.hasTable("sms_transaction_account_links"))
         assertTrue(sqlite.hasTable("bank_account_balance_observations"))

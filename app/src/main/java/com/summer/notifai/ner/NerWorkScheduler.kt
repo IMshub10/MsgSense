@@ -23,7 +23,7 @@ class NerWorkScheduler @Inject constructor(
 ) : NerScheduler {
     override suspend fun enqueueRealtime(sms: SmsEntity) {
         if (sms.smsClassificationTypeId != NerConstants.BANKING_TRANSACTION_CLASSIFICATION_ID) return
-        dao.enqueueRealtime(sms.id, System.currentTimeMillis())
+        dao.enqueueRealtime(sms.id, NerPipelineMetadata.PIPELINE_FINGERPRINT, System.currentTimeMillis())
         enqueueRealtimeWorker()
     }
 

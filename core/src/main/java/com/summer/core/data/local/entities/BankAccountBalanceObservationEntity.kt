@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
-            entity = SmsNerExtractionEntity::class,
+            entity = NerRunEntity::class,
             parentColumns = ["id"],
             childColumns = ["source_extraction_id"],
             onDelete = ForeignKey.CASCADE,

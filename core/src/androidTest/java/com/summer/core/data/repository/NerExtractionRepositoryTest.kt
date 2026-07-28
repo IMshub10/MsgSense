@@ -8,8 +8,8 @@ import com.summer.core.data.local.db.SmsDatabase
 import com.summer.core.data.local.entities.SenderAddressEntity
 import com.summer.core.data.local.entities.SenderType
 import com.summer.core.data.local.entities.SmsEntity
-import com.summer.core.data.local.entities.SmsNerEntity
-import com.summer.core.data.local.entities.SmsNerExtractionEntity
+import com.summer.core.data.local.entities.NerMentionEntity
+import com.summer.core.data.local.entities.NerRunEntity
 import com.summer.core.banking.BankAccountOrganizer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -107,24 +107,36 @@ class NerExtractionRepositoryTest {
                 updatedAtApp = 1,
             )
         )
-        val extractionId = database.nerDao().insertExtraction(
-            SmsNerExtractionEntity(
+        val extractionId = database.nerDao().insertRun(
+            NerRunEntity(
                 smsId = smsId,
                 status = "COMPLETED",
                 priority = "REALTIME",
+                pipelineFingerprint = "synthetic",
                 createdAt = 1,
                 updatedAt = 1,
             )
         )
-        database.nerDao().insertEntities(
-            listOf(
+        database.nerDao().complete(
+            runId = extractionId,
+            mentions = listOf(
                 entity(extractionId, 0, "MERCHANT", "Synthetic Store"),
                 entity(extractionId, 1, "AMOUNT", "INR 125", "125"),
                 entity(extractionId, 2, "DIRECTION", "debited", "DEBIT"),
                 entity(extractionId, 3, "BANK", "HDFC Bank"),
                 entity(extractionId, 4, "ACCOUNT", "0012345678", "0012345678"),
                 entity(extractionId, 5, "BALANCE", "INR 2200", "2200"),
-            )
+            ),
+            modelId = "synthetic",
+            modelSha256 = "synthetic-model",
+            tokenizerSha256 = "synthetic-tokenizer",
+            preprocessingVersion = "synthetic-preprocessor",
+            tokenCount = 8,
+            truncated = false,
+            inferenceMs = 1.0,
+            notificationState = "NONE",
+            now = 1,
+            pipelineFingerprint = "synthetic",
         )
         return extractionId
     }
@@ -135,8 +147,8 @@ class NerExtractionRepositoryTest {
         type: String,
         raw: String,
         normalized: String? = raw,
-    ) = SmsNerEntity(
-        extractionId = extractionId,
+    ) = NerMentionEntity(
+        runId = extractionId,
         entityOrder = order,
         entityType = type,
         rawText = raw,

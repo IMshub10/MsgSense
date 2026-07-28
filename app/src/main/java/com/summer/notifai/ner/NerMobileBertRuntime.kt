@@ -4,6 +4,7 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import android.content.Context
+import com.summer.core.ner.NerEntityTypes
 import com.summer.notifai.banking_ner.BankingBioDecoder
 import com.summer.notifai.banking_ner.HfTokenizerBridge
 import java.io.File
@@ -66,6 +67,10 @@ class NerMobileBertRuntime(private val context: Context) : AutoCloseable {
         val entities = decodeBodyEntities(body, input.tokens, labels)
         return NerInferenceResult(
             smsId, MODEL_ID, modelSha256, tokenizerSha256, NerPreprocessor.VERSION,
+            NerPipelineMetadata.PIPELINE_FINGERPRINT,
+            NerPipelineMetadata.LABEL_SCHEMA_SHA256,
+            NerPipelineMetadata.DECODER_VERSION,
+            NerPipelineMetadata.NORMALIZER_VERSION,
             input.tokens.size, truncated, inferenceMs, entities,
         )
     }
@@ -87,8 +92,9 @@ class NerMobileBertRuntime(private val context: Context) : AutoCloseable {
                     val startOffset = requireNotNull(group.first().bodyStart)
                     val endOffset = requireNotNull(group.last().bodyEnd)
                     val raw = body.substring(startOffset, endOffset)
+                    val entityType = NerEntityTypes.requireKnown(currentType)
                     entities += NerExtractedEntity(
-                        currentType, raw, NerNormalizer.normalize(currentType, raw),
+                        entityType, raw, NerNormalizer.normalize(entityType, raw),
                         startOffset, endOffset,
                     )
                 }

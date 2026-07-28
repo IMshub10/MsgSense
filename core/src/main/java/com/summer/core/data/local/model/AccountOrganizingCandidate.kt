@@ -10,5 +10,5 @@ data class AccountOrganizingCandidate(
     @ColumnInfo(name = "account") val account: String?,
     @ColumnInfo(name = "card_type") val cardType: String?,
     @ColumnInfo(name = "balance") val balance: String?,
-    @ColumnInfo(name = "raw_balance") val rawBalance: String?,
+    @ColumnInfo(name = "balance_currency") val balanceCurrency: String?,
 )

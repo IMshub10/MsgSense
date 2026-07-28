@@ -5,18 +5,23 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.summer.core.data.local.entities.SmsNerEntity
-import com.summer.core.data.local.entities.SmsNerExtractionEntity
-import com.summer.core.data.local.entities.SmsTransactionOverrideEntity
-import com.summer.core.data.local.entities.BankAccountEntity
+import com.summer.core.banking.BankingTransactionFactBuilder
 import com.summer.core.data.local.entities.BankAccountBalanceObservationEntity
+import com.summer.core.data.local.entities.BankAccountEntity
+import com.summer.core.data.local.entities.BankingNerNotificationEntity
+import com.summer.core.data.local.entities.BankingTransactionFactEntity
+import com.summer.core.data.local.entities.BankingTransactionOverrideEntity
+import com.summer.core.data.local.entities.NerMentionEntity
+import com.summer.core.data.local.entities.NerRunEntity
+import com.summer.core.data.local.entities.NerRunMetadataEntity
 import com.summer.core.data.local.entities.SmsTransactionAccountLinkEntity
 import com.summer.core.data.local.model.AccountOrganizingCandidate
-import com.summer.core.data.local.model.PendingNerSms
-import com.summer.core.data.local.model.CompletedNerExtraction
+import com.summer.core.data.local.model.BankingNotificationRow
+import com.summer.core.data.local.model.BankingTransactionRow
 import com.summer.core.data.local.model.NerProcessingSummary
-import com.summer.core.data.local.model.TransactionProjection
+import com.summer.core.data.local.model.PendingNerSms
 import com.summer.core.ner.NerConstants
+import com.summer.core.ner.NerEntityTypes
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -94,45 +99,56 @@ abstract class NerDao {
 
     @Query(
         """
-        SELECT extraction.id AS extraction_id, sms.date AS sms_date, sms.raw_address AS raw_address,
-               (SELECT raw_text FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'BANK' ORDER BY entity_order LIMIT 1) AS bank,
-               (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'ACCOUNT' ORDER BY entity_order LIMIT 1) AS account,
-               (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'CARD_TYPE' ORDER BY entity_order LIMIT 1) AS card_type,
-               (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'BALANCE' ORDER BY entity_order LIMIT 1) AS balance,
-               (SELECT raw_text FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'BALANCE' ORDER BY entity_order LIMIT 1) AS raw_balance
-        FROM sms_ner_extractions extraction
-        INNER JOIN sms_messages sms ON sms.id = extraction.sms_id
+        SELECT run.id AS extraction_id, sms.date AS sms_date, sms.raw_address AS raw_address,
+               fact.bank AS bank, fact.account AS account, fact.card_type AS card_type,
+               fact.balance AS balance, fact.balance_currency AS balance_currency
+        FROM ner_runs run
+        INNER JOIN banking_transaction_facts fact ON fact.run_id = run.id
+        INNER JOIN sms_messages sms ON sms.id = run.sms_id
         INNER JOIN sender_addresses sender ON sender.id = sms.sender_address_id
-        LEFT JOIN sms_transaction_account_links link ON link.extraction_id = extraction.id
-        WHERE extraction.status = 'COMPLETED' AND sender.is_blocked = 0 AND link.id IS NULL
+        LEFT JOIN sms_transaction_account_links link ON link.extraction_id = run.id
+        WHERE run.status = 'COMPLETED' AND run.active = 1
+          AND sender.is_blocked = 0 AND link.id IS NULL
         ORDER BY sms.date ASC
         LIMIT :limit
         """
     )
     abstract suspend fun accountOrganizingCandidates(limit: Int): List<AccountOrganizingCandidate>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun upsertTransactionOverride(override: SmsTransactionOverrideEntity)
+    abstract suspend fun upsertTransactionOverride(override: BankingTransactionOverrideEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract suspend fun insertExtraction(extraction: SmsNerExtractionEntity): Long
+    abstract suspend fun insertRun(run: NerRunEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertEntities(entities: List<SmsNerEntity>)
+    abstract suspend fun insertMentions(mentions: List<NerMentionEntity>): LongArray
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun upsertRunMetadata(metadata: NerRunMetadataEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun upsertTransactionFact(fact: BankingTransactionFactEntity)
 
     @Query(
         """
-        INSERT OR IGNORE INTO sms_ner_extractions
-            (sms_id, status, priority, attempts, notification_ready, notification_state, created_at, updated_at)
-        SELECT id, 'PENDING', 'BACKFILL', 0, 0, 'NONE', :now, :now
+        INSERT OR IGNORE INTO ner_runs
+            (sms_id, status, priority, attempts, pipeline_fingerprint, active, created_at, updated_at)
+        SELECT id, 'PENDING', 'BACKFILL', 0, :pipelineFingerprint, 1, :now, :now
         FROM sms_messages
         WHERE sms_classification_type_id = 2
+          AND NOT EXISTS (
+              SELECT 1 FROM ner_runs existing
+              WHERE existing.sms_id = sms_messages.id
+                AND existing.pipeline_fingerprint = :pipelineFingerprint
+          )
         """
     )
-    abstract suspend fun enqueueMissingBackfill(now: Long)
+    abstract suspend fun enqueueMissingBackfill(pipelineFingerprint: String, now: Long)
 
     @Query(
         """
-        UPDATE sms_ner_extractions
+        UPDATE ner_runs
         SET status = 'PENDING', updated_at = :now, failure_code = 'PROCESS_INTERRUPTED',
             failure_message = NULL
         WHERE status = 'RUNNING' AND priority = :priority
@@ -142,39 +158,41 @@ abstract class NerDao {
 
     @Query(
         """
-        UPDATE sms_ner_extractions
+        UPDATE ner_runs
         SET priority = 'REALTIME', status = CASE WHEN status = 'FAILED' THEN 'PENDING' ELSE status END,
             updated_at = :now
-        WHERE sms_id = :smsId AND status != 'COMPLETED'
+        WHERE sms_id = :smsId AND pipeline_fingerprint = :pipelineFingerprint AND status != 'COMPLETED'
         """
     )
-    abstract suspend fun promoteToRealtime(smsId: Long, now: Long)
+    abstract suspend fun promoteToRealtime(smsId: Long, pipelineFingerprint: String, now: Long)
 
     @Transaction
-    open suspend fun enqueueRealtime(smsId: Long, now: Long) {
-        insertExtraction(
-            SmsNerExtractionEntity(
+    open suspend fun enqueueRealtime(smsId: Long, pipelineFingerprint: String, now: Long) {
+        insertRun(
+            NerRunEntity(
                 smsId = smsId,
                 status = "PENDING",
                 priority = "REALTIME",
+                pipelineFingerprint = pipelineFingerprint,
                 createdAt = now,
                 updatedAt = now,
             )
         )
-        promoteToRealtime(smsId, now)
+        promoteToRealtime(smsId, pipelineFingerprint, now)
     }
 
     @Query(
         """
-        SELECT e.id AS extraction_id, s.id AS sms_id, s.sender_address_id, s.raw_address, s.body,
-               e.priority, e.attempts, sender.is_blocked, e.notification_id
-        FROM sms_ner_extractions e
-        INNER JOIN sms_messages s ON s.id = e.sms_id
-        INNER JOIN sender_addresses sender ON sender.id = s.sender_address_id
-        WHERE e.status = 'PENDING'
-        ORDER BY CASE e.priority WHEN 'REALTIME' THEN 0 ELSE 1 END,
-                 e.attempts ASC,
-                 CASE e.priority WHEN 'REALTIME' THEN e.created_at ELSE s.date END ASC
+        SELECT run.id AS extraction_id, sms.id AS sms_id, sms.sender_address_id, sms.raw_address, sms.body,
+               run.priority, run.attempts, sender.is_blocked, notification.notification_id
+        FROM ner_runs run
+        INNER JOIN sms_messages sms ON sms.id = run.sms_id
+        INNER JOIN sender_addresses sender ON sender.id = sms.sender_address_id
+        LEFT JOIN banking_ner_notifications notification ON notification.run_id = run.id
+        WHERE run.status = 'PENDING'
+        ORDER BY CASE run.priority WHEN 'REALTIME' THEN 0 ELSE 1 END,
+                 run.attempts ASC,
+                 CASE run.priority WHEN 'REALTIME' THEN run.created_at ELSE sms.date END ASC
         LIMIT 1
         """
     )
@@ -182,54 +200,63 @@ abstract class NerDao {
 
     @Query(
         """
-        SELECT e.id AS extraction_id, s.id AS sms_id, s.sender_address_id, s.raw_address, s.body,
-               e.priority, e.attempts, sender.is_blocked, e.notification_id
-        FROM sms_ner_extractions e
-        INNER JOIN sms_messages s ON s.id = e.sms_id
-        INNER JOIN sender_addresses sender ON sender.id = s.sender_address_id
-        WHERE e.status = 'PENDING' AND e.priority = :priority
-        ORDER BY e.attempts ASC, CASE e.priority WHEN 'REALTIME' THEN e.created_at ELSE s.date END ASC
+        SELECT run.id AS extraction_id, sms.id AS sms_id, sms.sender_address_id, sms.raw_address, sms.body,
+               run.priority, run.attempts, sender.is_blocked, notification.notification_id
+        FROM ner_runs run
+        INNER JOIN sms_messages sms ON sms.id = run.sms_id
+        INNER JOIN sender_addresses sender ON sender.id = sms.sender_address_id
+        LEFT JOIN banking_ner_notifications notification ON notification.run_id = run.id
+        WHERE run.status = 'PENDING' AND run.priority = :priority
+        ORDER BY run.attempts ASC, CASE run.priority WHEN 'REALTIME' THEN run.created_at ELSE sms.date END ASC
         LIMIT 1
         """
     )
     abstract suspend fun nextPendingForPriority(priority: String): PendingNerSms?
 
-    @Query("SELECT EXISTS(SELECT 1 FROM sms_ner_extractions WHERE status = 'PENDING' AND priority = 'REALTIME')")
+    @Query("SELECT EXISTS(SELECT 1 FROM ner_runs WHERE status = 'PENDING' AND priority = 'REALTIME')")
     abstract suspend fun hasPendingRealtime(): Boolean
 
     @Query(
         """
         SELECT EXISTS(
-            SELECT 1 FROM sms_ner_extractions
+            SELECT 1 FROM ner_runs
             WHERE priority = 'REALTIME' AND status IN ('PENDING', 'RUNNING')
         )
         """
     )
     abstract suspend fun hasRealtimeWork(): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM sms_ner_extractions WHERE status = 'PENDING')")
+    @Query("SELECT EXISTS(SELECT 1 FROM ner_runs WHERE status = 'PENDING')")
     abstract suspend fun hasPending(): Boolean
 
     @Query(
         """
-        UPDATE sms_ner_extractions
+        UPDATE ner_runs
         SET status = 'RUNNING', attempts = attempts + 1, started_at = :now, updated_at = :now,
             failure_code = NULL, failure_message = NULL
-        WHERE id = :extractionId AND status = 'PENDING'
+        WHERE id = :runId AND status = 'PENDING'
         """
     )
-    abstract suspend fun markRunning(extractionId: Long, now: Long): Int
+    abstract suspend fun markRunning(runId: Long, now: Long): Int
 
     @Query(
         """
-        UPDATE sms_ner_extractions
-        SET notification_id = :notificationId, notification_state = :state,
-            notification_suppression_reason = :suppressionReason, updated_at = :now
-        WHERE id = :extractionId
+        INSERT OR REPLACE INTO banking_ner_notifications
+            (id, run_id, notification_id, state, suppression_reason, posted_at, created_at, updated_at)
+        VALUES (
+            (SELECT id FROM banking_ner_notifications WHERE run_id = :runId),
+            :runId,
+            :notificationId,
+            :state,
+            COALESCE(:suppressionReason, (SELECT suppression_reason FROM banking_ner_notifications WHERE run_id = :runId)),
+            (SELECT posted_at FROM banking_ner_notifications WHERE run_id = :runId),
+            COALESCE((SELECT created_at FROM banking_ner_notifications WHERE run_id = :runId), :now),
+            :now
+        )
         """
     )
     abstract suspend fun updateNotificationState(
-        extractionId: Long,
+        runId: Long,
         notificationId: Int,
         state: String,
         suppressionReason: String?,
@@ -238,136 +265,140 @@ abstract class NerDao {
 
     @Query(
         """
-        UPDATE sms_ner_extractions
+        UPDATE ner_runs
         SET status = 'PENDING', updated_at = :now, failure_code = :code, failure_message = :message
-        WHERE id = :extractionId
+        WHERE id = :runId
         """
     )
-    abstract suspend fun markPendingFailure(extractionId: Long, now: Long, code: String, message: String?)
+    abstract suspend fun markPendingFailure(runId: Long, now: Long, code: String, message: String?)
 
     @Query(
         """
-        UPDATE sms_ner_extractions
+        UPDATE ner_runs
         SET status = 'FAILED', updated_at = :now, completed_at = :now,
             failure_code = :code, failure_message = :message
-        WHERE id = :extractionId
+        WHERE id = :runId
         """
     )
-    abstract suspend fun markTerminalFailure(extractionId: Long, now: Long, code: String, message: String?)
+    abstract suspend fun markTerminalFailure(runId: Long, now: Long, code: String, message: String?)
 
     @Query(
         """
-        UPDATE sms_ner_extractions
-        SET notification_state = 'NONE', notification_ready = 0, updated_at = :now
-        WHERE id = :extractionId
+        UPDATE banking_ner_notifications
+        SET state = 'NONE', updated_at = :now
+        WHERE run_id = :runId
         """
     )
-    abstract suspend fun clearNotificationState(extractionId: Long, now: Long)
+    abstract suspend fun clearNotificationState(runId: Long, now: Long)
 
-    @Query("DELETE FROM sms_ner_entities WHERE extraction_id = :extractionId")
-    abstract suspend fun deleteEntities(extractionId: Long)
+    @Query("DELETE FROM ner_mentions WHERE run_id = :runId")
+    abstract suspend fun deleteMentions(runId: Long)
 
     @Query(
         """
-        UPDATE sms_ner_extractions
-        SET status = 'COMPLETED', model_id = :modelId, model_sha256 = :modelSha256,
-            tokenizer_sha256 = :tokenizerSha256, preprocessing_version = :preprocessingVersion,
-            token_count = :tokenCount, truncated = :truncated, inference_ms = :inferenceMs,
-            entity_count = :entityCount, notification_ready = :notificationReady,
-            notification_state = :notificationState, completed_at = :now,
-            updated_at = :now, failure_code = NULL, failure_message = NULL
-        WHERE id = :extractionId
+        UPDATE ner_runs
+        SET status = 'COMPLETED', active = 1, stale_reason = NULL,
+            completed_at = :now, updated_at = :now, failure_code = NULL, failure_message = NULL
+        WHERE id = :runId
         """
     )
-    abstract suspend fun markCompleted(
-        extractionId: Long,
-        modelId: String,
-        modelSha256: String,
-        tokenizerSha256: String,
-        preprocessingVersion: String,
-        tokenCount: Int,
-        truncated: Boolean,
-        inferenceMs: Double,
-        entityCount: Int,
-        notificationReady: Boolean,
-        notificationState: String,
-        now: Long,
+    abstract suspend fun markCompleted(runId: Long, now: Long)
+
+    @Query(
+        """
+        UPDATE ner_runs
+        SET active = 0, stale_reason = :reason, updated_at = :now
+        WHERE id != :runId
+          AND sms_id = (SELECT sms_id FROM ner_runs WHERE id = :runId)
+          AND active = 1
+        """
     )
+    abstract suspend fun deactivateOtherRuns(runId: Long, reason: String, now: Long)
 
-    @Transaction
-    @Query("SELECT * FROM sms_ner_extractions WHERE status = 'COMPLETED' ORDER BY completed_at DESC")
-    abstract fun observeCompleted(): Flow<List<CompletedNerExtraction>>
+    @Query(
+        """
+        SELECT notification.run_id, notification.notification_id, notification.state,
+               fact.amount, fact.account
+        FROM banking_ner_notifications notification
+        INNER JOIN ner_runs run ON run.id = notification.run_id
+        INNER JOIN banking_transaction_facts fact ON fact.run_id = notification.run_id
+        WHERE notification.run_id = :runId AND run.status = 'COMPLETED' AND run.active = 1
+        LIMIT 1
+        """
+    )
+    abstract suspend fun notificationByRunId(runId: Long): BankingNotificationRow?
 
-    @Transaction
-    @Query("SELECT * FROM sms_ner_extractions WHERE id = :extractionId AND status = 'COMPLETED' LIMIT 1")
-    abstract suspend fun completedById(extractionId: Long): CompletedNerExtraction?
-
-    @Query("SELECT id FROM sms_ner_extractions WHERE status = 'COMPLETED' AND notification_state = 'READY'")
+    @Query(
+        """
+        SELECT notification.run_id
+        FROM banking_ner_notifications notification
+        INNER JOIN ner_runs run ON run.id = notification.run_id
+        WHERE run.status = 'COMPLETED' AND run.active = 1 AND notification.state = 'READY'
+        """
+    )
     abstract suspend fun readyNotificationIds(): List<Long>
 
     @Query(
         """
         SELECT sender.is_blocked
-        FROM sms_ner_extractions extraction
-        INNER JOIN sms_messages sms ON sms.id = extraction.sms_id
+        FROM ner_runs run
+        INNER JOIN sms_messages sms ON sms.id = run.sms_id
         INNER JOIN sender_addresses sender ON sender.id = sms.sender_address_id
-        WHERE extraction.id = :extractionId
+        WHERE run.id = :runId
         LIMIT 1
         """
     )
-    abstract suspend fun isExtractionSenderBlocked(extractionId: Long): Boolean?
+    abstract suspend fun isExtractionSenderBlocked(runId: Long): Boolean?
 
     @Query(
         """
-        UPDATE sms_ner_extractions
-        SET notification_state = 'POSTED', notification_ready = 0,
-            result_notification_posted_at = :now, updated_at = :now
-        WHERE id = :extractionId AND notification_state = 'READY'
+        UPDATE banking_ner_notifications
+        SET state = 'POSTED', posted_at = :now, updated_at = :now
+        WHERE run_id = :runId AND state = 'READY'
         """
     )
-    abstract suspend fun markNotificationPosted(extractionId: Long, now: Long): Int
+    abstract suspend fun markNotificationPosted(runId: Long, now: Long): Int
 
     @Query(
         """
-        UPDATE sms_ner_extractions
-        SET notification_state = 'SUPPRESSED', notification_ready = 0,
-            notification_suppression_reason = :reason, updated_at = :now
-        WHERE id = :extractionId
+        UPDATE banking_ner_notifications
+        SET state = 'SUPPRESSED', suppression_reason = :reason, updated_at = :now
+        WHERE run_id = :runId
         """
     )
-    abstract suspend fun suppressNotification(extractionId: Long, reason: String, now: Long)
+    abstract suspend fun suppressNotification(runId: Long, reason: String, now: Long)
 
-    @Query(TRANSACTION_PROJECTION_QUERY + " ORDER BY sms.date DESC")
-    abstract fun observeTransactions(includeSmsBody: Boolean = false): Flow<List<TransactionProjection>>
+    @Query(TRANSACTION_ROW_QUERY + " ORDER BY sms.date DESC")
+    abstract fun observeTransactions(includeSmsBody: Boolean = false): Flow<List<BankingTransactionRow>>
 
     @Query(
         """
         SELECT
             (SELECT COUNT(*) FROM sms_messages WHERE sms_classification_type_id = 2) AS eligible_count,
-            (SELECT COUNT(*) FROM sms_ner_extractions WHERE status = 'PENDING') AS pending_count,
-            (SELECT COUNT(*) FROM sms_ner_extractions WHERE status = 'RUNNING') AS running_count,
-            (SELECT COUNT(*) FROM sms_ner_extractions WHERE status = 'COMPLETED') AS completed_count,
-            (SELECT COUNT(*) FROM sms_ner_extractions WHERE status = 'FAILED') AS failed_count
+            (SELECT COUNT(*) FROM ner_runs WHERE status = 'PENDING') AS pending_count,
+            (SELECT COUNT(*) FROM ner_runs WHERE status = 'RUNNING') AS running_count,
+            (SELECT COUNT(*) FROM ner_runs WHERE status = 'COMPLETED') AS completed_count,
+            (SELECT COUNT(*) FROM ner_runs WHERE status = 'FAILED') AS failed_count
         """
     )
     abstract fun observeProcessingSummary(): Flow<NerProcessingSummary>
 
-    @Query(TRANSACTION_PROJECTION_QUERY + " AND extraction.id = :extractionId LIMIT 1")
+    @Query(TRANSACTION_ROW_QUERY + " AND run.id = :extractionId LIMIT 1")
     abstract fun observeTransaction(
         extractionId: Long,
         includeSmsBody: Boolean = true,
-    ): Flow<TransactionProjection?>
+    ): Flow<BankingTransactionRow?>
 
-    @Query(TRANSACTION_PROJECTION_QUERY + " AND extraction.id = :extractionId LIMIT 1")
+    @Query(TRANSACTION_ROW_QUERY + " AND run.id = :extractionId LIMIT 1")
     abstract suspend fun transactionById(
         extractionId: Long,
         includeSmsBody: Boolean = true,
-    ): TransactionProjection?
+    ): BankingTransactionRow?
 
     @Transaction
     open suspend fun complete(
-        extractionId: Long,
-        entities: List<SmsNerEntity>,
+        runId: Long,
+        mentions: List<NerMentionEntity>,
         modelId: String,
         modelSha256: String,
         tokenizerSha256: String,
@@ -377,34 +408,77 @@ abstract class NerDao {
         inferenceMs: Double,
         notificationState: String,
         now: Long,
+        pipelineFingerprint: String,
+        labelSchemaSha256: String? = null,
+        decoderVersion: String? = null,
+        normalizerVersion: String? = null,
     ) {
-        deleteEntities(extractionId)
-        insertEntities(entities)
-        markCompleted(
-            extractionId, modelId, modelSha256, tokenizerSha256, preprocessingVersion,
-            tokenCount, truncated, inferenceMs, entities.size,
-            notificationState == NerConstants.NOTIFICATION_STATE_READY, notificationState,
-            now,
+        mentions.forEach { NerEntityTypes.requireKnown(it.entityType) }
+        deleteMentions(runId)
+        val mentionIds = insertMentions(mentions)
+        val persistedMentions = mentions.zip(mentionIds.asIterable()).map { (mention, id) ->
+            mention.copy(id = id)
+        }
+        upsertRunMetadata(
+            NerRunMetadataEntity(
+                runId = runId,
+                modelId = modelId,
+                modelSha256 = modelSha256,
+                tokenizerSha256 = tokenizerSha256,
+                preprocessingVersion = preprocessingVersion,
+                labelSchemaSha256 = labelSchemaSha256,
+                decoderVersion = decoderVersion,
+                normalizerVersion = normalizerVersion,
+                tokenCount = tokenCount,
+                truncated = truncated,
+                inferenceMs = inferenceMs,
+                mentionCount = mentions.size,
+                createdAt = now,
+                updatedAt = now,
+            )
+        )
+        upsertTransactionFact(
+            BankingTransactionFactBuilder.build(
+                runId = runId,
+                mentions = persistedMentions,
+                truncated = truncated,
+                now = now,
+            )
+        )
+        markCompleted(runId, now)
+        deactivateOtherRuns(runId, "SUPERSEDED_BY_NEWER_RUN", now)
+        updateNotificationState(
+            runId = runId,
+            notificationId = notificationIdForRun(runId),
+            state = notificationState,
+            suppressionReason = null,
+            now = now,
         )
     }
 
+    private fun notificationIdForRun(runId: Long): Int =
+        NOTIFICATION_ID_BASE - (runId % NOTIFICATION_ID_RANGE).toInt()
+
     companion object {
-        private const val TRANSACTION_PROJECTION_QUERY = """
-            SELECT extraction.id AS extraction_id, sms.id AS sms_id,
+        private const val NOTIFICATION_ID_BASE = -2_000_000
+        private const val NOTIFICATION_ID_RANGE = 1_000_000_000L
+
+        private const val TRANSACTION_ROW_QUERY = """
+            SELECT run.id AS run_id, sms.id AS sms_id,
                    sms.sender_address_id AS sender_address_id,
                    CASE WHEN :includeSmsBody = 1 THEN sms.body ELSE '' END AS sms_body,
-                   sms.date AS sms_date, extraction.truncated AS truncated,
-                   (SELECT raw_text FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'MERCHANT' ORDER BY entity_order LIMIT 1) AS raw_merchant,
-                   (SELECT raw_text FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'AMOUNT' ORDER BY entity_order LIMIT 1) AS raw_amount,
-                   (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'AMOUNT' ORDER BY entity_order LIMIT 1) AS normalized_amount,
-                   (SELECT raw_text FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'DIRECTION' ORDER BY entity_order LIMIT 1) AS raw_direction,
-                   (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'DIRECTION' ORDER BY entity_order LIMIT 1) AS normalized_direction,
-                   (SELECT raw_text FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'BANK' ORDER BY entity_order LIMIT 1) AS bank,
-                   (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'ACCOUNT' ORDER BY entity_order LIMIT 1) AS account,
-                   (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'TXN_TYPE' ORDER BY entity_order LIMIT 1) AS txn_type,
-                   (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'CARD_TYPE' ORDER BY entity_order LIMIT 1) AS card_type,
-                   (SELECT normalized_value FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'BALANCE' ORDER BY entity_order LIMIT 1) AS balance,
-                   (SELECT raw_text FROM sms_ner_entities WHERE extraction_id = extraction.id AND entity_type = 'BALANCE' ORDER BY entity_order LIMIT 1) AS raw_balance,
+                   sms.date AS sms_date, metadata.truncated AS truncated,
+                   fact.merchant AS merchant,
+                   fact.amount AS amount,
+                   fact.amount_currency AS currency,
+                   fact.direction AS direction,
+                   fact.bank AS bank,
+                   fact.account AS account,
+                   fact.txn_type AS txn_type,
+                   fact.card_type AS card_type,
+                   fact.balance AS balance,
+                   fact.balance_currency AS balance_currency,
+                   fact.review_state AS review_state,
                    account_link.account_id AS account_id,
                    user_override.merchant AS override_merchant,
                    user_override.amount AS override_amount,
@@ -413,12 +487,14 @@ abstract class NerDao {
                    user_override.category AS override_category,
                    user_override.payment_method AS override_payment_method,
                    user_override.review_state AS override_review_state
-            FROM sms_ner_extractions extraction
-            INNER JOIN sms_messages sms ON sms.id = extraction.sms_id
+            FROM ner_runs run
+            INNER JOIN banking_transaction_facts fact ON fact.run_id = run.id
+            LEFT JOIN ner_run_metadata metadata ON metadata.run_id = run.id
+            INNER JOIN sms_messages sms ON sms.id = run.sms_id
             INNER JOIN sender_addresses sender ON sender.id = sms.sender_address_id
-            LEFT JOIN sms_transaction_overrides user_override ON user_override.extraction_id = extraction.id
-            LEFT JOIN sms_transaction_account_links account_link ON account_link.extraction_id = extraction.id
-            WHERE extraction.status = 'COMPLETED' AND sender.is_blocked = 0
+            LEFT JOIN banking_transaction_overrides user_override ON user_override.run_id = run.id
+            LEFT JOIN sms_transaction_account_links account_link ON account_link.extraction_id = run.id
+            WHERE run.status = 'COMPLETED' AND run.active = 1 AND sender.is_blocked = 0
         """
     }
 }

@@ -1,6 +1,6 @@
 package com.summer.core.data.model
 
-import com.summer.core.data.local.model.TransactionProjection
+import com.summer.core.data.local.model.BankingTransactionRow
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -34,23 +34,23 @@ data class BankingTransaction(
         val PAYMENT_METHODS = listOf("UPI", "Card", "Bank Transfer", "Cash", "Other")
         val DIRECTIONS = listOf("DEBIT", "CREDIT")
 
-        fun from(row: TransactionProjection): BankingTransaction {
-            val direction = row.overrideDirection ?: row.normalizedDirection.orEmpty().uppercase(Locale.US)
-            val amount = row.overrideAmount ?: row.normalizedAmount
-            val reviewState = row.overrideReviewState ?: if (
+        fun from(row: BankingTransactionRow): BankingTransaction {
+            val direction = row.overrideDirection ?: row.direction.orEmpty().uppercase(Locale.US)
+            val amount = row.overrideAmount ?: row.amount
+            val reviewState = row.overrideReviewState ?: row.reviewState ?: if (
                 row.truncated == true || amount.isNullOrBlank() ||
                 direction !in setOf("DEBIT", "CREDIT", "REVERSAL")
             ) "NEEDS_REVIEW" else "AI_EXTRACTED"
             return BankingTransaction(
-                extractionId = row.extractionId,
+                extractionId = row.runId,
                 smsId = row.smsId,
                 senderAddressId = row.senderAddressId,
                 accountId = row.accountId,
                 originalSms = row.smsBody,
                 timestamp = row.smsDate,
-                merchant = row.overrideMerchant ?: row.rawMerchant ?: row.bank ?: "Bank transaction",
+                merchant = row.overrideMerchant ?: row.merchant ?: row.bank ?: "Bank transaction",
                 amount = amount?.let(::cleanDecimal),
-                currency = row.overrideCurrency ?: detectCurrency(row.rawAmount),
+                currency = row.overrideCurrency ?: row.currency.orEmpty(),
                 direction = direction.ifBlank { "UNKNOWN" },
                 category = row.overrideCategory ?: "Other",
                 paymentMethod = row.overridePaymentMethod ?: inferPaymentMethod(row.txnType, row.cardType),

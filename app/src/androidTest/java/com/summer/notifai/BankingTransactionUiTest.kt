@@ -20,8 +20,8 @@ import com.summer.core.data.local.db.SmsDatabase
 import com.summer.core.data.local.entities.SenderAddressEntity
 import com.summer.core.data.local.entities.SenderType
 import com.summer.core.data.local.entities.SmsEntity
-import com.summer.core.data.local.entities.SmsNerEntity
-import com.summer.core.data.local.entities.SmsNerExtractionEntity
+import com.summer.core.data.local.entities.NerMentionEntity
+import com.summer.core.data.local.entities.NerRunEntity
 import com.summer.core.data.local.preference.PreferenceKey
 import com.summer.notifai.ui.MainActivity
 import com.summer.notifai.di.NotificationIntentProviderImpl
@@ -76,18 +76,19 @@ class BankingTransactionUiTest {
                 updatedAtApp = 1,
             )
         )
-        extractionId = database.nerDao().insertExtraction(
-            SmsNerExtractionEntity(
+        extractionId = database.nerDao().insertRun(
+            NerRunEntity(
                 smsId = smsId,
                 status = "PENDING",
                 priority = "REALTIME",
+                pipelineFingerprint = "synthetic-ui-test",
                 createdAt = 1,
                 updatedAt = 1,
             )
         )
         database.nerDao().complete(
-            extractionId = extractionId,
-            entities = listOf(
+            runId = extractionId,
+            mentions = listOf(
                 entity(extractionId, 0, "MERCHANT", "Synthetic Store"),
                 entity(extractionId, 1, "AMOUNT", "INR 125", "125"),
                 entity(extractionId, 2, "DIRECTION", "debited", "DEBIT"),
@@ -104,6 +105,7 @@ class BankingTransactionUiTest {
             inferenceMs = 1.0,
             notificationState = "NONE",
             now = 2,
+            pipelineFingerprint = "synthetic-ui-test",
         )
         assertNotNull(database.nerDao().transactionById(extractionId))
     }
@@ -201,8 +203,8 @@ class BankingTransactionUiTest {
         type: String,
         raw: String,
         normalized: String? = raw,
-    ) = SmsNerEntity(
-        extractionId = extractionId,
+    ) = NerMentionEntity(
+        runId = extractionId,
         entityOrder = order,
         entityType = type,
         rawText = raw,

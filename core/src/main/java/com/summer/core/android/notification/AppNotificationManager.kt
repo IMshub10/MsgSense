@@ -8,7 +8,6 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.summer.core.R
-import com.summer.core.data.local.entities.SmsNerEntity
 import com.summer.core.data.local.entities.SmsEntity
 import com.summer.core.di.ChatSessionTracker
 import com.summer.core.ui.model.SmsImportanceType
@@ -132,7 +131,8 @@ class AppNotificationManager @Inject constructor(
     fun showBankingResultNotification(
         notificationId: Int,
         extractionId: Long,
-        entities: List<SmsNerEntity>,
+        amount: String?,
+        account: String?,
     ) {
         val notification = NotificationCompat.Builder(
             context,
@@ -140,7 +140,7 @@ class AppNotificationManager @Inject constructor(
         )
             .setSmallIcon(R.drawable.ic_sms_sync_24x24)
             .setContentTitle("Banking transaction")
-            .setContentText(BankingNotificationContent.from(entities))
+            .setContentText(BankingNotificationContent.from(amount = amount, account = account))
             .setContentIntent(notificationIntentProvider.provideBankingTransactionPendingIntent(extractionId))
             .setAutoCancel(true)
             .setSilent(true)

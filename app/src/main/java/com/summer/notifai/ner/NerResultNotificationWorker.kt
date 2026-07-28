@@ -35,10 +35,9 @@ class NerResultNotificationWorker @AssistedInject constructor(
     }
 
     private suspend fun postIfReady(extractionId: Long) {
-        val completed = dao.completedById(extractionId) ?: return
-        val extraction = completed.extraction
-        if (extraction.notificationState != NerConstants.NOTIFICATION_STATE_READY) return
-        val notificationId = extraction.notificationId ?: return
+        val notification = dao.notificationByRunId(extractionId) ?: return
+        if (notification.state != NerConstants.NOTIFICATION_STATE_READY) return
+        val notificationId = notification.notificationId
         if (dao.isExtractionSenderBlocked(extractionId) == true) {
             notificationManager.cancelBankingNotification(notificationId)
             dao.suppressNotification(
@@ -54,7 +53,12 @@ class NerResultNotificationWorker @AssistedInject constructor(
             )
             return
         }
-        notificationManager.showBankingResultNotification(notificationId, extractionId, completed.entities)
+        notificationManager.showBankingResultNotification(
+            notificationId = notificationId,
+            extractionId = extractionId,
+            amount = notification.amount,
+            account = notification.account,
+        )
         dao.markNotificationPosted(extractionId, System.currentTimeMillis())
     }
 

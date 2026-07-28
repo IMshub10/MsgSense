@@ -71,7 +71,7 @@ class BankAccountOrganizer @Inject constructor(
                         accountId = accountId,
                         sourceExtractionId = candidate.extractionId,
                         balance = balance,
-                        currency = detectCurrency(candidate.rawBalance),
+                        currency = candidate.balanceCurrency.orEmpty(),
                         observedAt = candidate.smsDate,
                         createdAt = now,
                     )
@@ -141,11 +141,4 @@ class BankAccountOrganizer @Inject constructor(
 
     private fun String.toDecimalOrNull(): String? =
         runCatching { BigDecimal(this).stripTrailingZeros().toPlainString() }.getOrNull()
-
-    private fun detectCurrency(raw: String?): String = when {
-        raw?.contains("USD", true) == true || raw?.contains("$") == true -> "USD"
-        raw?.contains("EUR", true) == true || raw?.contains("€") == true -> "EUR"
-        raw?.contains("GBP", true) == true || raw?.contains("£") == true -> "GBP"
-        else -> "INR"
-    }
 }

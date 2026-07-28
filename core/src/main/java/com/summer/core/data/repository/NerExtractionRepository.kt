@@ -1,9 +1,8 @@
 package com.summer.core.data.repository
 
 import com.summer.core.data.local.dao.NerDao
-import com.summer.core.data.local.model.CompletedNerExtraction
 import com.summer.core.data.local.model.NerProcessingSummary
-import com.summer.core.data.local.entities.SmsTransactionOverrideEntity
+import com.summer.core.data.local.entities.BankingTransactionOverrideEntity
 import com.summer.core.data.model.BankingTransaction
 import com.summer.core.banking.BankAccountOrganizer
 import com.summer.core.data.model.BankAccount
@@ -25,8 +24,6 @@ class NerExtractionRepository @Inject constructor(
     private val dao: NerDao,
     private val accountOrganizer: BankAccountOrganizer,
 ) {
-    fun observeCompleted(): Flow<List<CompletedNerExtraction>> = dao.observeCompleted()
-
     fun observeTransactions(): Flow<List<BankingTransaction>> =
         dao.observeTransactions().map { rows -> rows.map(BankingTransaction::from) }
 
@@ -133,8 +130,8 @@ class NerExtractionRepository @Inject constructor(
     ) {
         val now = System.currentTimeMillis()
         dao.upsertTransactionOverride(
-            SmsTransactionOverrideEntity(
-                extractionId = extractionId,
+            BankingTransactionOverrideEntity(
+                runId = extractionId,
                 merchant = merchant.trim(),
                 amount = amount,
                 currency = currency,
