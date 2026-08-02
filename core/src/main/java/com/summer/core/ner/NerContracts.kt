@@ -7,9 +7,7 @@ object NerConstants {
     const val PRIORITY_REALTIME = "REALTIME"
     const val PRIORITY_BACKFILL = "BACKFILL"
     const val MAX_ATTEMPTS = 3
-    const val BACKFILL_CHUNK_SIZE = 25
-    const val BACKFILL_CHUNK_DURATION_MS = 2 * 60 * 1000L
-    const val BACKFILL_QUIET_PERIOD_MS = 30 * 1000L
+    const val BACKFILL_MAX_RUN_MS = 5 * 60 * 1000L
     const val REALTIME_TIMEOUT_MS = 2 * 60 * 1000L
     const val NOTIFICATION_STATE_NONE = "NONE"
     const val NOTIFICATION_STATE_PROGRESS = "PROGRESS"

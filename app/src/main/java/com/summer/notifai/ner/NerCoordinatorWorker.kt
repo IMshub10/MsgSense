@@ -13,6 +13,7 @@ import com.summer.core.data.local.entities.NerMentionEntity
 import com.summer.core.data.local.model.PendingNerSms
 import com.summer.core.ner.NerConstants
 import com.summer.core.banking.BankAccountOrganizer
+import com.summer.core.worker.WorkerExecution
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
@@ -20,6 +21,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import java.util.UUID
 
 @HiltWorker
 class NerCoordinatorWorker @AssistedInject constructor(
@@ -30,29 +32,79 @@ class NerCoordinatorWorker @AssistedInject constructor(
     private val notificationManager: AppNotificationManager,
     private val accountOrganizer: BankAccountOrganizer,
 ) : CoroutineWorker(appContext, workerParameters) {
+
+    private data class RunOutcome(
+        val result: Result,
+        val processed: Int,
+        val exitCause: String,
+        val failureCode: String? = null,
+        val failureMessage: String? = null,
+    )
+
     override suspend fun doWork(): Result {
         val mode = inputData.getString(INPUT_MODE) ?: NerWorkScheduler.MODE_BACKFILL
+        val isRealtime = mode == NerWorkScheduler.MODE_REALTIME
+        val chainId = inputData.getString(INPUT_CHAIN_ID) ?: UUID.randomUUID().toString()
+        val chainIndex = inputData.getInt(INPUT_CHAIN_INDEX, 0)
         dao.recoverInterrupted(
-            if (mode == NerWorkScheduler.MODE_REALTIME) NerConstants.PRIORITY_REALTIME
-            else NerConstants.PRIORITY_BACKFILL,
+            if (isRealtime) NerConstants.PRIORITY_REALTIME else NerConstants.PRIORITY_BACKFILL,
             System.currentTimeMillis(),
         )
-        return if (mode == NerWorkScheduler.MODE_REALTIME) {
-            processRealtime()
-        } else {
-            processBackfill()
+
+        WorkerExecution.start(
+            workerType = WorkerExecution.TYPE_NER,
+            mode = if (isRealtime) WorkerExecution.MODE_REALTIME else WorkerExecution.MODE_BACKFILL,
+            workRequestId = id.toString(),
+            chainId = chainId,
+            chainIndex = chainIndex,
+            runAttempt = runAttemptCount,
+        )
+        var outcome = RunOutcome(Result.success(), 0, WorkerExecution.CAUSE_DRAINED)
+        try {
+            outcome = if (isRealtime) processRealtime() else processBackfill(chainId, chainIndex)
+            return outcome.result
+        } catch (cancelled: CancellationException) {
+            outcome = outcome.copy(result = Result.retry(), exitCause = WorkerExecution.CAUSE_STOPPED)
+            throw cancelled
+        } finally {
+            withContext(NonCancellable) {
+                val wasStopped = isStopped
+                WorkerExecution.end(
+                    workRequestId = id.toString(),
+                    result = resultName(outcome.result),
+                    exitCause = if (wasStopped) WorkerExecution.CAUSE_STOPPED else outcome.exitCause,
+                    wasStopped = wasStopped,
+                    stopReason = if (wasStopped) currentStopReason() else null,
+                    itemsProcessed = outcome.processed,
+                    failureCode = outcome.failureCode,
+                    failureMessage = outcome.failureMessage,
+                )
+            }
         }
     }
 
-    private suspend fun processRealtime(): Result {
+    private fun resultName(result: Result): String = when (result) {
+        is Result.Success -> WorkerExecution.RESULT_SUCCESS
+        is Result.Retry -> WorkerExecution.RESULT_RETRY
+        else -> WorkerExecution.RESULT_FAILURE
+    }
+
+    private fun currentStopReason(): Int? = try {
+        stopReason
+    } catch (_: Throwable) {
+        null
+    }
+
+    private suspend fun processRealtime(): RunOutcome {
         val pending = dao.nextPendingForPriority(NerConstants.PRIORITY_REALTIME)
-            ?: return Result.success()
+            ?: return RunOutcome(Result.success(), 0, WorkerExecution.CAUSE_DRAINED)
         val notificationId = pending.notificationId ?: notificationIdFor(pending.extractionId)
         var notificationVisible = prepareRealtimeNotification(pending, notificationId)
+        WorkerExecution.foreground(id.toString(), notificationVisible)
         if (dao.markRunning(pending.extractionId, System.currentTimeMillis()) == 0) {
             if (notificationVisible) notificationManager.cancelBankingNotification(notificationId)
             dao.clearNotificationState(pending.extractionId, System.currentTimeMillis())
-            return Result.success()
+            return RunOutcome(Result.success(), 0, WorkerExecution.CAUSE_DRAINED)
         }
 
         val client = NerServiceClient(appContext)
@@ -93,7 +145,7 @@ class NerCoordinatorWorker @AssistedInject constructor(
                 scheduler.enqueueResultNotification(pending.extractionId, id)
             }
             scheduler.enqueueNextRealtime()
-            Result.success()
+            RunOutcome(Result.success(), 1, WorkerExecution.CAUSE_COMPLETED)
         } catch (timeout: TimeoutCancellationException) {
             notificationManager.cancelBankingNotification(notificationId)
             dao.clearNotificationState(pending.extractionId, System.currentTimeMillis())
@@ -103,12 +155,12 @@ class NerCoordinatorWorker @AssistedInject constructor(
                     pending.extractionId, System.currentTimeMillis(), "REALTIME_TIMEOUT", null,
                 )
                 scheduler.enqueueNextRealtime()
-                Result.success()
+                RunOutcome(Result.success(), 0, WorkerExecution.CAUSE_FAILURE, "REALTIME_TIMEOUT")
             } else {
                 dao.markPendingFailure(
                     pending.extractionId, System.currentTimeMillis(), "REALTIME_TIMEOUT", null,
                 )
-                Result.retry()
+                RunOutcome(Result.retry(), 0, WorkerExecution.CAUSE_FAILURE, "REALTIME_TIMEOUT")
             }
         } catch (cancelled: CancellationException) {
             notificationManager.cancelBankingNotification(notificationId)
@@ -128,12 +180,12 @@ class NerCoordinatorWorker @AssistedInject constructor(
                     pending.extractionId, System.currentTimeMillis(), code, error.message?.take(200),
                 )
                 scheduler.enqueueNextRealtime()
-                Result.success()
+                RunOutcome(Result.success(), 0, WorkerExecution.CAUSE_FAILURE, code, error.message?.take(200))
             } else {
                 dao.markPendingFailure(
                     pending.extractionId, System.currentTimeMillis(), code, error.message?.take(200),
                 )
-                Result.retry()
+                RunOutcome(Result.retry(), 0, WorkerExecution.CAUSE_FAILURE, code, error.message?.take(200))
             }
         } finally {
             client.close()
@@ -172,18 +224,31 @@ class NerCoordinatorWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun processBackfill(): Result {
+    private suspend fun processBackfill(chainId: String, chainIndex: Int): RunOutcome {
         dao.enqueueMissingBackfill(NerPipelineMetadata.PIPELINE_FINGERPRINT, System.currentTimeMillis())
+        val ranAsForeground = try {
+            setForeground(createBackfillForegroundInfo())
+            true
+        } catch (_: Exception) {
+            false
+        }
+        WorkerExecution.foreground(id.toString(), ranAsForeground)
         val client = NerServiceClient(appContext)
         val started = System.currentTimeMillis()
         var processed = 0
+        var realtimePreempted = false
+        var drained = false
         try {
-            while (!isStopped &&
-                processed < NerConstants.BACKFILL_CHUNK_SIZE &&
-                System.currentTimeMillis() - started < NerConstants.BACKFILL_CHUNK_DURATION_MS
-            ) {
-                if (dao.hasRealtimeWork()) break
-                val pending = dao.nextPendingForPriority(NerConstants.PRIORITY_BACKFILL) ?: break
+            while (!isStopped && System.currentTimeMillis() - started < NerConstants.BACKFILL_MAX_RUN_MS) {
+                if (dao.hasRealtimeWork()) {
+                    realtimePreempted = true
+                    break
+                }
+                val pending = dao.nextPendingForPriority(NerConstants.PRIORITY_BACKFILL)
+                if (pending == null) {
+                    drained = true
+                    break
+                }
                 if (dao.markRunning(pending.extractionId, System.currentTimeMillis()) == 0) continue
                 try {
                     val result = client.extract(pending.smsId, pending.rawAddress, pending.body)
@@ -236,9 +301,15 @@ class NerCoordinatorWorker @AssistedInject constructor(
         } finally {
             client.close()
             if (dao.hasRealtimeWork()) scheduler.enqueueNextRealtime()
-            else if (dao.hasPending()) scheduler.resumeBackfillAfterQuietPeriod()
+            else if (dao.hasPending()) scheduler.resumeBackfillAfterQuietPeriod(chainId, chainIndex + 1)
         }
-        return Result.success()
+        val exitCause = when {
+            isStopped -> WorkerExecution.CAUSE_STOPPED
+            realtimePreempted -> WorkerExecution.CAUSE_REALTIME_PREEMPT
+            drained -> WorkerExecution.CAUSE_DRAINED
+            else -> WorkerExecution.CAUSE_DURATION_CAP
+        }
+        return RunOutcome(Result.success(), processed, exitCause)
     }
 
     private fun createForegroundInfo(notificationId: Int): ForegroundInfo {
@@ -250,12 +321,26 @@ class NerCoordinatorWorker @AssistedInject constructor(
         }
     }
 
+    // Backfill drains for minutes at a time, so it uses a long-running DATA_SYNC foreground service
+    // (like the SMS classifier) rather than the ~3-minute SHORT_SERVICE the realtime path uses.
+    private fun createBackfillForegroundInfo(): ForegroundInfo {
+        val notification = notificationManager.createBankingProgressNotification()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(BACKFILL_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            ForegroundInfo(BACKFILL_NOTIFICATION_ID, notification)
+        }
+    }
+
     private fun notificationIdFor(extractionId: Long): Int =
         NOTIFICATION_ID_BASE - (extractionId % NOTIFICATION_ID_RANGE).toInt()
 
     companion object {
         const val INPUT_MODE = "mode"
+        const val INPUT_CHAIN_ID = "chain_id"
+        const val INPUT_CHAIN_INDEX = "chain_index"
         private const val NOTIFICATION_ID_BASE = -2_000_000
         private const val NOTIFICATION_ID_RANGE = 1_000_000_000L
+        private const val BACKFILL_NOTIFICATION_ID = 424_200
     }
 }

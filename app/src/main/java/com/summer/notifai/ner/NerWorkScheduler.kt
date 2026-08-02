@@ -28,15 +28,23 @@ class NerWorkScheduler @Inject constructor(
     }
 
     override fun enqueueBackfill() {
-        enqueueBackfillWorker(delayMs = 0)
+        // External trigger (classification success, banking-fragment entry): KEEP dedups into the
+        // drain already running — the unique name is the lock.
+        enqueueBackfillWorker(delayMs = 0, policy = ExistingWorkPolicy.KEEP)
         enqueueNotificationRecovery()
         enqueueNextRealtime()
     }
 
     fun enqueueNextRealtime() = enqueueRealtimeWorker()
 
-    fun resumeBackfillAfterQuietPeriod() =
-        enqueueBackfillWorker(NerConstants.BACKFILL_QUIET_PERIOD_MS)
+    fun resumeBackfillAfterQuietPeriod(chainId: String, chainIndex: Int) =
+        // Self-continuation baton pass: APPEND_OR_REPLACE (KEEP would drop itself and kill the chain).
+        enqueueBackfillWorker(
+            delayMs = 0,
+            policy = ExistingWorkPolicy.APPEND_OR_REPLACE,
+            chainId = chainId,
+            chainIndex = chainIndex,
+        )
 
     fun enqueueResultNotification(extractionId: Long, coordinatorId: java.util.UUID) {
         val request = OneTimeWorkRequestBuilder<NerResultNotificationWorker>()
@@ -75,15 +83,28 @@ class NerWorkScheduler @Inject constructor(
         )
     }
 
-    private fun enqueueBackfillWorker(delayMs: Long) {
+    private fun enqueueBackfillWorker(
+        delayMs: Long,
+        policy: ExistingWorkPolicy,
+        chainId: String? = null,
+        chainIndex: Int = 0,
+    ) {
+        val inputData = Data.Builder()
+            .putString(NerCoordinatorWorker.INPUT_MODE, MODE_BACKFILL)
+        // Only self-continuations carry a chain id; external triggers start a fresh chain so the
+        // worker mints its own id (one drain session = rows sharing that chain id).
+        if (chainId != null) {
+            inputData.putString(NerCoordinatorWorker.INPUT_CHAIN_ID, chainId)
+            inputData.putInt(NerCoordinatorWorker.INPUT_CHAIN_INDEX, chainIndex)
+        }
         val request = OneTimeWorkRequestBuilder<NerCoordinatorWorker>()
-            .setInputData(Data.Builder().putString(NerCoordinatorWorker.INPUT_MODE, MODE_BACKFILL).build())
+            .setInputData(inputData.build())
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
             .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(
             BACKFILL_WORK_NAME,
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            policy,
             request,
         )
     }
