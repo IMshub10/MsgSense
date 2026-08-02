@@ -529,6 +529,8 @@ abstract class SmsDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
                 database.execSQL("ALTER TABLE `sms_transaction_account_links` RENAME TO `sms_transaction_account_links_legacy`")
+                database.execSQL("DROP INDEX IF EXISTS `index_sms_transaction_account_links_extraction_id`")
+                database.execSQL("DROP INDEX IF EXISTS `index_sms_transaction_account_links_account_id`")
                 database.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `sms_transaction_account_links` (
@@ -549,6 +551,8 @@ abstract class SmsDatabase : RoomDatabase() {
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_sms_transaction_account_links_account_id` ON `sms_transaction_account_links` (`account_id`)")
                 database.execSQL("INSERT INTO `sms_transaction_account_links` SELECT * FROM `sms_transaction_account_links_legacy`")
                 database.execSQL("ALTER TABLE `bank_account_balance_observations` RENAME TO `bank_account_balance_observations_legacy`")
+                database.execSQL("DROP INDEX IF EXISTS `index_bank_account_balance_observations_account_id_observed_at`")
+                database.execSQL("DROP INDEX IF EXISTS `index_bank_account_balance_observations_source_extraction_id`")
                 database.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `bank_account_balance_observations` (

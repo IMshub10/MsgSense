@@ -51,7 +51,11 @@ class SmsDatabaseMigrationTest {
         assertTrue(!sqlite.hasTable("sms_transaction_overrides"))
         assertTrue(sqlite.hasTable("bank_accounts"))
         assertTrue(sqlite.hasTable("sms_transaction_account_links"))
+        assertTrue(sqlite.hasIndex("index_sms_transaction_account_links_extraction_id"))
+        assertTrue(sqlite.hasIndex("index_sms_transaction_account_links_account_id"))
         assertTrue(sqlite.hasTable("bank_account_balance_observations"))
+        assertTrue(sqlite.hasIndex("index_bank_account_balance_observations_account_id_observed_at"))
+        assertTrue(sqlite.hasIndex("index_bank_account_balance_observations_source_extraction_id"))
         database.close()
     }
 
@@ -106,6 +110,11 @@ class SmsDatabaseMigrationTest {
 
     private fun SupportSQLiteDatabase.hasTable(name: String): Boolean =
         query("SELECT name FROM sqlite_master WHERE type='table' AND name=?", arrayOf(name)).use {
+            it.moveToFirst()
+        }
+
+    private fun SupportSQLiteDatabase.hasIndex(name: String): Boolean =
+        query("SELECT name FROM sqlite_master WHERE type='index' AND name=?", arrayOf(name)).use {
             it.moveToFirst()
         }
 
