@@ -15,9 +15,7 @@ import com.summer.core.data.local.dao.SmsDao
 import com.summer.core.data.local.entities.SmsEntity
 import com.summer.core.data.local.preference.PreferenceKey
 import com.summer.core.data.local.preference.SharedPreferencesManager
-import com.summer.core.ml.model.SmsClassifierModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.summer.core.classifier.SmsClassifier
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,7 +32,7 @@ class SmsInserter @Inject constructor(
     private val contactDao: ContactDao,
     private val countryCodeProvider: CountryCodeProvider,
     private val preferencesManager: SharedPreferencesManager,
-    private val smsClassifierModel: SmsClassifierModel
+    private val smsClassifier: SmsClassifier
 ) {
     /**
      * Handles incoming SMS from the BroadcastReceiver.
@@ -88,9 +86,7 @@ class SmsInserter @Inject constructor(
 
     private suspend fun classifySms(sms: SmsEntity): SmsEntity {
         return try {
-            val classification = withContext(Dispatchers.Default) { // Run classification on Default
-                smsClassifierModel.classifySms(sms.rawAddress, sms.body)
-            }
+            val classification = smsClassifier.classify(sms.rawAddress, sms.body)
             sms.copy(
                 importanceScore = classification.importanceScore,
                 smsClassificationTypeId = classification.smsClassificationTypeId,

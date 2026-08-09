@@ -6,11 +6,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
     <application>
         <service
-            android:name=".android.sms.service.SmsProcessingService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
-        <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:exported="false"
             android:foregroundServiceType="dataSync|shortService" />

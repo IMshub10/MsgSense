@@ -9,12 +9,10 @@ import androidx.paging.PagingSource
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.summer.core.R
-import com.summer.core.android.device.util.DeviceTierEvaluator
 import com.summer.core.android.sms.constants.Constants.SEARCH_SECTION_MAX_COUNT
 import com.summer.core.android.sms.constants.SMSColumnNames
 import com.summer.core.android.sms.data.mapper.SmsMapper
 import com.summer.core.android.sms.data.model.SmsInfoModel
-import com.summer.core.android.sms.processor.SmsBatchProcessor
 import com.summer.core.android.sms.util.SmsStatus
 import com.summer.core.data.local.dao.SmsDao
 import com.summer.core.data.local.entities.SmsClassificationTypeEntity
@@ -23,46 +21,19 @@ import com.summer.core.data.local.model.SearchSmsMessageQueryModel
 import com.summer.core.data.local.model.SmsMessageModel
 import com.summer.core.data.local.preference.PreferenceKey
 import com.summer.core.data.local.preference.SharedPreferencesManager
-import com.summer.core.domain.model.FetchResult
 import com.summer.core.domain.model.SearchSectionHeader
 import com.summer.core.domain.model.SearchSectionId
 import com.summer.core.domain.model.SearchSectionResult
-import com.summer.core.domain.model.SmsBatchResult
 import com.summer.core.domain.repository.ISmsRepository
 import com.summer.core.ui.model.SmsImportanceType
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class SmsRepository @Inject constructor(
     private val smsDao: SmsDao,
-    private val smsBatchProcessor: SmsBatchProcessor,
     private val sharedPreferencesManager: SharedPreferencesManager,
-    private val deviceTierEvaluator: DeviceTierEvaluator
 ) : ISmsRepository {
-
-    override suspend fun fetchSmsMessagesFromDevice(): Flow<FetchResult> {
-        val batchSettings = deviceTierEvaluator.getRecommendedBatchSettings()
-        return smsBatchProcessor.processSmsInBatches(
-            batchSize = batchSettings.first,
-            batchSettings.second
-        )
-    }
-
-    override suspend fun fetchSmsMessagesFromDevice(onProgress: suspend (Int, Int) -> Unit): SmsBatchResult {
-        val batchSettings = deviceTierEvaluator.getRecommendedBatchSettings()
-        return smsBatchProcessor.processSmsInBatches(
-            batchSettings.first,
-            batchSettings.second
-        ) { processedCount, totalCount ->
-            onProgress(processedCount, totalCount)
-        }
-    }
-
-    override fun setSmsProcessingStatusCompleted(isCompleted: Boolean) {
-        sharedPreferencesManager.saveData(PreferenceKey.SMS_PROCESSING_STATUS, isCompleted)
-    }
 
     override fun getPagedSmsMessagesPagedBySenderAddressId(
         senderAddressId: Long,

@@ -1,6 +1,7 @@
 package com.summer.core.di
 
 import android.content.Context
+import com.summer.core.classifier.SmsClassifier
 import com.summer.core.ml.model.SmsClassifierModel
 import dagger.Module
 import dagger.Provides
@@ -15,7 +16,7 @@ object ModelModule {
 
     @Provides
     @Singleton
-    fun provideSmsClassifierModel(@ApplicationContext context: Context): SmsClassifierModel {
+    fun provideSmsClassifier(@ApplicationContext context: Context): SmsClassifier {
         return SmsClassifierModel(context)
     }
 }

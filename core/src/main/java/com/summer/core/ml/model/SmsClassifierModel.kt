@@ -17,9 +17,13 @@ import com.summer.core.ml.util.Constants.PADDING_TOKEN
 import com.summer.core.ml.util.Constants.SEPARATOR
 import com.summer.core.ml.util.Constants.TOKENIZER_FILE_NAME
 import com.summer.core.ml.util.Constants.VOCAB
+import com.summer.core.classifier.SmsClassification
+import com.summer.core.classifier.SmsClassifier
 import com.summer.core.ml.tokenizer.WordPieceTokenizer
 import com.summer.core.util.roundToTwoDecimalPlaces
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -29,7 +33,17 @@ import javax.inject.Singleton
 import kotlin.math.exp
 
 @Singleton
-class SmsClassifierModel(@ApplicationContext context: Context) {
+class SmsClassifierModel(@ApplicationContext context: Context) : SmsClassifier {
+
+    override suspend fun classify(rawAddress: String, body: String): SmsClassification =
+        withContext(Dispatchers.Default) {
+            val output = classifySms(rawAddress, body)
+            SmsClassification(
+                importanceScore = output.importanceScore,
+                smsClassificationTypeId = output.smsClassificationTypeId,
+                confidenceScore = output.confidenceScore,
+            )
+        }
     private var ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
     private var ortSession: OrtSession
     private var vocab: Map<String, Long>
@@ -104,7 +118,7 @@ class SmsClassifierModel(@ApplicationContext context: Context) {
     /**
      * Runs ONNX inference and returns label + confidence score
      */
-    fun classifySms(sender: String, message: String): SmsClassifierOutputModel {
+    private fun classifySms(sender: String, message: String): SmsClassifierOutputModel {
         val inputText = getInputTextFromSenderNMessage(sender, message)
         val inputTokens = wordPieceTokenizer.tokenize(inputText, maxLength = 128)
         val attentionMask =

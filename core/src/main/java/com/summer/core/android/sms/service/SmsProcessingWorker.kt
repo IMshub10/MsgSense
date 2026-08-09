@@ -13,9 +13,8 @@ import com.summer.core.android.notification.AppNotificationManager
 import com.summer.core.android.notification.AppNotificationManager.Companion.NOTIFICATION_ID_SMS_PROCESSING
 import com.summer.core.android.sms.model.SmsProcessingError
 import com.summer.core.android.sms.model.SmsProcessingStatus
+import com.summer.core.classifier.ClassifySmsUseCase
 import com.summer.core.domain.model.SmsBatchResult
-import com.summer.core.domain.repository.ISmsRepository
-import com.summer.core.ner.NerScheduler
 import com.summer.core.worker.WorkerExecution
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -28,9 +27,8 @@ import java.util.UUID
 class SmsProcessingWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val repository: ISmsRepository,
+    private val classifySmsUseCase: ClassifySmsUseCase,
     private val appNotificationManager: AppNotificationManager,
-    private val nerScheduler: NerScheduler,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -64,7 +62,7 @@ class SmsProcessingWorker @AssistedInject constructor(
             }
             WorkerExecution.foreground(id.toString(), ranAsForeground)
 
-            val finalResult = repository.fetchSmsMessagesFromDevice { processed: Int, total: Int ->
+            val finalResult = classifySmsUseCase { processed: Int, total: Int ->
                 totalMessages = total
 
                 // Update notification on each batch
@@ -157,8 +155,6 @@ class SmsProcessingWorker @AssistedInject constructor(
     private suspend fun getWorkerResult(finalResult: SmsBatchResult): Result {
         return when(finalResult){
             is SmsBatchResult.Success -> {
-                repository.setSmsProcessingStatusCompleted(true)
-                nerScheduler.enqueueBackfill()
                 setProgress(workDataOf(SmsProcessingStatus.STATUS_KEY to SmsProcessingStatus.Success.key))
                 Result.success()
             }

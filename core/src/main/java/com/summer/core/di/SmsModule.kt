@@ -5,8 +5,8 @@ import android.content.Context
 import com.summer.core.android.sms.data.source.ISmsContentProvider
 import com.summer.core.android.sms.data.source.SmsContentProvider
 import com.summer.core.android.sms.processor.SmsBatchProcessor
+import com.summer.core.classifier.SmsClassifier
 import com.summer.core.data.local.dao.SmsDao
-import com.summer.core.ml.model.SmsClassifierModel
 import com.summer.core.util.CountryCodeProvider
 import dagger.Module
 import dagger.Provides
@@ -36,13 +36,13 @@ object SmsModule {
     fun provideSmsBatchProcessor(
         smsContentProvider: ISmsContentProvider,
         smsDao: SmsDao,
-        smsClassifierModel: SmsClassifierModel,
+        smsClassifier: SmsClassifier,
         countryCodeProvider: CountryCodeProvider
     ): SmsBatchProcessor {
         return SmsBatchProcessor(
             smsContentProvider,
             smsDao,
-            smsClassifierModel,
+            smsClassifier,
             countryCodeProvider
         )
     }
