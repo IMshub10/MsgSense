@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.summer.core.android.permission.manager.IPermissionManager
-import com.summer.core.di.PrewarmManager
+import com.summer.notifai.di.PrewarmManager
 import com.summer.core.ui.BaseActivity
 import com.summer.core.util.showShortToast
 import com.summer.notifai.R

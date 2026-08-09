@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import com.summer.core.data.local.model.ContactInfoInboxModel
-import com.summer.core.domain.usecase.SearchBlockedSendersUseCase
-import com.summer.core.domain.usecase.UnblockSenderUseCase
+import com.summer.notifai.domain.usecase.SearchBlockedSendersUseCase
+import com.summer.notifai.domain.usecase.UnblockSenderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

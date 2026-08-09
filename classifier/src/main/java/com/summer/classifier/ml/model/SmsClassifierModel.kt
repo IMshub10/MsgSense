@@ -17,8 +17,8 @@ import com.summer.classifier.ml.util.Constants.PADDING_TOKEN
 import com.summer.classifier.ml.util.Constants.SEPARATOR
 import com.summer.classifier.ml.util.Constants.TOKENIZER_FILE_NAME
 import com.summer.classifier.ml.util.Constants.VOCAB
-import com.summer.core.classifier.SmsClassification
-import com.summer.core.classifier.SmsClassifier
+import com.summer.classifier.SmsClassification
+import com.summer.classifier.SmsClassifier
 import com.summer.classifier.ml.tokenizer.WordPieceTokenizer
 import com.summer.core.util.roundToTwoDecimalPlaces
 import dagger.hilt.android.qualifiers.ApplicationContext

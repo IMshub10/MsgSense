@@ -5,7 +5,7 @@ import android.view.View
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.summer.core.domain.repository.IOnboardingRepository
+import com.summer.notifai.domain.repository.IOnboardingRepository
 import com.summer.notifai.R
 import com.summer.notifai.databinding.FragUserAgreementBinding
 import com.summer.notifai.ui.onboarding.OnboardingViewModel

@@ -1,7 +1,7 @@
 package com.summer.classifier.di
 
 import android.content.Context
-import com.summer.core.classifier.SmsClassifier
+import com.summer.classifier.SmsClassifier
 import com.summer.classifier.ml.model.SmsClassifierModel
 import dagger.Module
 import dagger.Provides

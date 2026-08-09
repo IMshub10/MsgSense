@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.summer.core.domain.model.FetchResult
 import com.summer.core.android.phone.data.entity.ContactEntity
-import com.summer.core.domain.repository.IOnboardingRepository
-import com.summer.core.domain.usecase.SyncContactsUseCase
+import com.summer.notifai.domain.repository.IOnboardingRepository
+import com.summer.notifai.domain.usecase.SyncContactsUseCase
 import com.summer.core.util.ResultState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

@@ -2,7 +2,6 @@ package com.summer.classifier
 
 import android.util.Log
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.summer.core.classifier.SmsClassifier
 import com.summer.core.data.local.entities.SmsEntity
 import com.summer.core.domain.model.SmsBatchResult
 import kotlinx.coroutines.Dispatchers
