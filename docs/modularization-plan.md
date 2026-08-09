@@ -24,8 +24,8 @@ messaging** repositories/use-cases, Android integration, and DI wiring.
   Depends on `:core` only.
 - **`:ner`** — vertical slice for banking intelligence (extract → facts → accounts → read API):
   **workers** (coordinator/realtime/result-notification/account-organization) → **use cases** →
-  **feature repository** (`NerExtractionRepository`, plus the `BankingTransactionFactBuilder` /
-  `BankAccountOrganizer` write side), on top of the engine (MobileBERT runtime + Rust tokenizer),
+  **feature repository** (`NerExtractionRepository`, plus the `BankAccountOrganizer` write side),
+  on top of the engine (MobileBERT runtime + Rust tokenizer),
   the process-isolated inference service, and `NerWorkScheduler`. Depends on `:core` only.
 
 ---
@@ -70,6 +70,7 @@ DAOs.
 - **Infra:** `notification/*`, `permission/*`, `device/*` (`DeviceTierEvaluator`), `util/*`, network/Retrofit, base UI + `DataBindingAdapters`.
 - **Shared domain models** used by more than one module (e.g. `SmsBatchResult`, `FetchResult`, `SearchSection*`, `SmsImportanceType`).
 - **Shared reference data:** `BankRegistry` (+ `BalanceRefreshMethod`) — inert bank metadata with no behaviour, read by `:ner` (`BankAccountOrganizer.resolve`/`resolveSender`) *and* `:app` UI (`AccountDetailFrag` balance-refresh action). Keeps the buildSrc `verifyBankRegistry` source path stable.
+- **`BankingTransactionFactBuilder`** — called from inside `NerDao.complete()`'s transaction, so it stays with the DAO (§6.7).
 - **Contracts:** `NerContracts` (`NerScheduler` + `NerConstants`).
 - **Shared worker util:** `worker/WorkerExecution`.
 - `SharedPreferencesManager` / `PreferenceKey`.
@@ -96,7 +97,7 @@ with MobileBERT as its engine, not just the model.
   `BankAccountOrganizationWorker` + `BankAccountOrganizationScheduler` (moved from `app/banking/`).
 - **Use cases:** NER coordination/extraction domain logic; `NerWorkScheduler` (binds the `:core` `NerScheduler` contract).
 - **Feature repository:** `NerExtractionRepository` — reads (banking UI) + extraction/bank-account writes over `:core` NER DAOs; `:app` banking UI depends on `:ner` and reads through it.
-- **Fact + account write side:** `BankingTransactionFactBuilder` (mentions → `banking_transaction_facts`) and `BankAccountOrganizer` (facts → `bank_accounts` / links / balance observations), moved from `core/banking/`. Pure Kotlin over Room — no ML — but it is the write-half of this slice's data layer and the coordinator calls `organizePending()` inline after `dao.complete(...)`.
+- **Account write side:** `BankAccountOrganizer` (facts → `bank_accounts` / links / balance observations), moved from `core/banking/`. Pure Kotlin over Room — no ML — but it is the write-half of this slice's data layer and the coordinator calls `organizePending()` inline after `dao.complete(...)`. `BankingTransactionFactBuilder` (mentions → `banking_transaction_facts`) stayed in `:core`; see §6.7.
 - **Engine + service:** `NerInferenceService`, `NerIpc`, runtime, models, normalizer, preprocessor, `NerServiceClient`; `banking_ner/*` + `rust_tokenizer/` + `jniLibs/`; banking presentation models.
 - NER assets (MobileBERT `.onnx` + `tokenizer.json`); manifest `NerInferenceService` (`process=":ner"`); `onnxruntime`.
 - **Not here:** `BankRegistry` stays in `:core` (see below) and all banking **UI** stays in `:app`.
@@ -154,6 +155,23 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
   - Under this target, two of those land in `:classifier` when the module is created: the
     `SmsClassifier` interface (currently in `:core.classifier`) and `ClassifySmsUseCase`. The
     inversion itself is unchanged — only their final home moves.
+- **Phase 2 — DONE (`:ner` extracted).** Created the `:ner` library module (namespace
+  `com.summer.ner`) holding the engine, the isolated-process inference service, the coordinator
+  and result-notification workers, `NerWorkScheduler`, the bank-account organizer + its
+  worker/scheduler, and `NerExtractionRepository`. `:app` depends on `:ner` and no longer carries
+  the ONNX runtime, the Rust tokenizer build, or the NER asset sync. Packages are now
+  `com.summer.ner` (pipeline), `com.summer.ner.tokenizer` (JNI/decoder) and `com.summer.ner.banking`
+  (organizing + read repo). `:app:assembleDebug` and all unit tests are green; the merged manifest
+  still declares `NerInferenceService` with `android:process=":ner"`, and the APK packages both the
+  rebuilt `libhf_tokenizer_jni.so` ABIs and the generated `ner_mobilebert` assets.
+  - **Two deviations from §2.** `BankingTransactionFactBuilder` stayed in `:core` because
+    `NerDao.complete()` calls it inside a `@Transaction`, on mentions that only get their IDs
+    within that transaction — moving it would need `complete()` to take a builder lambda (see
+    §6.7). `BankRegistry` stayed in `:core` as planned.
+  - **JNI note.** The Rust exports are mangled from the Kotlin package
+    (`Java_com_summer_ner_tokenizer_HfTokenizerBridge_*`), resolved at runtime rather than compile
+    time. Any future rename of `com.summer.ner.tokenizer` must update `lib.rs` and regenerate the
+    native library via `:ner:buildRustTokenizerAndroid`.
 
 ---
 
@@ -177,18 +195,16 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
    `NerExtractionRepository` already injects the organizer. Putting it in `:app` would create a
    `:ner → :app` cycle; putting it in a peer `:banking` module would need a second cross-module
    contract. `BankRegistry` is the exception and stays in `:core` as shared reference data.
+7. **`BankingTransactionFactBuilder` home.** Left in `:core` next to `NerDao`, which calls it from
+   inside the `complete()` transaction. To finish moving banking rules out of `:core`, `complete()`
+   would need to accept a fact-builder lambda so `:ner` supplies the mapping. Deferred.
 
 ---
 
 ## 7. Phased execution (each phase compiles & is independently valuable)
 
 - **Phase 1 — DONE.** Classifier contract inversion + `ClassifySmsUseCase` + repo slimming.
-- **Phase 2 — Create `:ner`.** Move `ner/*` + `banking_ner/*` + Rust/JNI + assets + inference-service
-  manifest into `:ner`, along with the slice's data layer: `NerExtractionRepository`, banking models,
-  and the organizing code that is split across modules today — `core/banking/{BankAccountOrganizer,
-  BankingTransactionFactBuilder}` plus `app/banking/{BankAccountOrganizationWorker,
-  BankAccountOrganizationScheduler}`. Leave `BankRegistry` in `:core`. Keep `NerScheduler` in `:core`;
-  wire `:app → :ner`. Lower risk (NER is already isolated behind `NerScheduler`).
+- **Phase 2 — DONE.** `:ner` created; see §5 for what landed and the two deviations.
 - **Phase 3 — Create `:classifier`.** Move ML + tokenizer + `SmsClassifier` interface +
   `SmsBatchProcessor` + `ClassifySmsUseCase` + `SmsProcessingWorker` + assets into `:classifier`, and
   introduce `ClassifierRepository` as the slice's data layer over `:core` DAOs; wire `:app → :classifier`.

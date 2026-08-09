@@ -5,9 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.summer.core.data.model.BankingOverview
 import com.summer.core.data.model.CategoryTotal
 import com.summer.core.data.model.CurrencyTotals
-import com.summer.core.data.repository.NerExtractionRepository
+import com.summer.ner.banking.NerExtractionRepository
 import com.summer.core.ner.NerScheduler
-import com.summer.notifai.banking.BankAccountOrganizationScheduler
+import com.summer.ner.banking.BankAccountOrganizationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
 import javax.inject.Inject

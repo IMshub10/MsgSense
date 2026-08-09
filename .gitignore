@@ -23,7 +23,7 @@ keystore.properties
 **/rust_tokenizer/target/
 
 # Rust cross-compiled JNI libs (built by buildRustTokenizerAndroid task)
-app/src/main/jniLibs/
+ner/src/main/jniLibs/
 
 # Large golden test fixture (generate locally or from CI artifact)
 app/src/main/assets/banking_test_onxx/golden_test.json
