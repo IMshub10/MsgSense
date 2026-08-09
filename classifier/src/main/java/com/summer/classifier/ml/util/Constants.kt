@@ -1,4 +1,4 @@
-package com.summer.core.ml.util
+package com.summer.classifier.ml.util
 
 object Constants {
     const val TOKEN_MAX_LENGTH = 128

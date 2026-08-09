@@ -20,8 +20,8 @@ messaging** repositories/use-cases, Android integration, and DI wiring.
   (`NerScheduler`). No feature logic, no repositories, no use cases.
 - **`:classifier`** — vertical slice for classification: **worker** (`SmsProcessingWorker`)
   → **use case** (`ClassifySmsUseCase`) → **feature repository** (`ClassifierRepository`),
-  plus the engine (`SmsClassifierModel` + tokenizer + `SmsClassifier` API + `SmsBatchProcessor`).
-  Depends on `:core` only.
+  plus the engine (`SmsClassifierModel` + tokenizer + `SmsBatchProcessor`). Implements the
+  `SmsClassifier` contract that stays in `:core`. Depends on `:core` only.
 - **`:ner`** — vertical slice for banking intelligence (extract → facts → accounts → read API):
   **workers** (coordinator/realtime/result-notification/account-organization) → **use cases** →
   **feature repository** (`NerExtractionRepository`, plus the `BankAccountOrganizer` write side),
@@ -71,7 +71,7 @@ DAOs.
 - **Shared domain models** used by more than one module (e.g. `SmsBatchResult`, `FetchResult`, `SearchSection*`, `SmsImportanceType`).
 - **Shared reference data:** `BankRegistry` (+ `BalanceRefreshMethod`) — inert bank metadata with no behaviour, read by `:ner` (`BankAccountOrganizer.resolve`/`resolveSender`) *and* `:app` UI (`AccountDetailFrag` balance-refresh action). Keeps the buildSrc `verifyBankRegistry` source path stable.
 - **`BankingTransactionFactBuilder`** — called from inside `NerDao.complete()`'s transaction, so it stays with the DAO (§6.7).
-- **Contracts:** `NerContracts` (`NerScheduler` + `NerConstants`).
+- **Contracts:** `NerContracts` (`NerScheduler` + `NerConstants`), `classifier/ClassifierContracts` (`SmsClassifier` + `SmsClassification`).
 - **Shared worker util:** `worker/WorkerExecution`.
 - `SharedPreferencesManager` / `PreferenceKey`.
 
@@ -85,9 +85,10 @@ DAOs.
 - **Worker:** `SmsProcessingWorker`.
 - **Use case:** `ClassifySmsUseCase`.
 - **Feature repository:** `ClassifierRepository` — the slice's data layer over `:core` DAOs / `SmsContentProvider` (device read + classified-write). Absorbs the direct DAO/content-provider access `SmsBatchProcessor` uses today.
-- **Engine:** `ml/model/SmsClassifierModel` (+ `SmsClassifierOutputModel`), `ml/tokenizer/*`, `ml/util/Constants`, `SmsBatchProcessor`, and the **`SmsClassifier` interface** (public API — relocated here from `:core`).
-- DI: `ModelModule` (+ batch-processor provider), `SmsClassificationException`.
+- **Engine:** `ml/model/SmsClassifierModel` (+ `SmsClassifierOutputModel`), `ml/tokenizer/*`, `ml/util/Constants`, `SmsBatchProcessor`.
+- DI: `di/ModelModule` (binds the `:core` `SmsClassifier` contract to the ONNX model); `SmsClassificationException`.
 - Assets (`.onnx` + vocab); `onnxruntime` (dropped from `:core`).
+- **Not here:** the **`SmsClassifier` contract stays in `:core`** — `SmsInserter` sits on the incoming-SMS path in `:core` and classifies through it, so relocating the interface would invert the dependency. Same shape as `NerScheduler`: contract in `:core`, implementation in the feature module, bound by Hilt at `:app`.
 
 ### `:ner` (`com.summer.ner`) — vertical slice
 Scope is the **whole banking-intelligence slice** — extract → facts → accounts → read API —
@@ -173,6 +174,19 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
     time. Any future rename of `com.summer.ner.tokenizer` must update `lib.rs` and regenerate the
     native library via `:ner:buildRustTokenizerAndroid`.
 
+- **Phase 3 — DONE (`:classifier` extracted).** Created the `:classifier` library module
+  (namespace `com.summer.classifier`) holding the ONNX model, WordPiece tokenizer, ML constants,
+  `SmsBatchProcessor`, `ClassifySmsUseCase`, `SmsProcessingWorker`, `ModelModule` and the ML assets
+  (`assets/ml/*`, still under the `ml/` prefix so the asset paths are unchanged). Added
+  `ClassifierRepository` as the slice's data layer; `SmsBatchProcessor` now works in batches of
+  `SmsEntity` and no longer touches `SmsDao`/`SmsContentProvider` directly. `:core` dropped
+  `onnxruntime` and the unused `opennlp` dependency. `:app:assembleDebug` and all unit tests green.
+  - **Deviation from §2.** The `SmsClassifier` contract stayed in `:core` (see the `:classifier`
+    section above) — `SmsInserter` still classifies incoming SMS from inside `:core`. Once Phase 4
+    moves `SmsInserter` to `:app`, the contract could follow the engine into `:classifier`.
+  - **Dropped on the way.** `SmsBatchProcessor`'s `Flow<FetchResult>` overload had no callers and
+    was removed rather than ported onto the repository.
+
 ---
 
 ## 6. Open points (deferred decisions)
@@ -205,9 +219,7 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
 
 - **Phase 1 — DONE.** Classifier contract inversion + `ClassifySmsUseCase` + repo slimming.
 - **Phase 2 — DONE.** `:ner` created; see §5 for what landed and the two deviations.
-- **Phase 3 — Create `:classifier`.** Move ML + tokenizer + `SmsClassifier` interface +
-  `SmsBatchProcessor` + `ClassifySmsUseCase` + `SmsProcessingWorker` + assets into `:classifier`, and
-  introduce `ClassifierRepository` as the slice's data layer over `:core` DAOs; wire `:app → :classifier`.
+- **Phase 3 — DONE.** `:classifier` created; see §5 for what landed and the contract deviation.
 - **Phase 4 — Move shared messaging stack + integration to `:app`.** Relocate the generic
   `domain/usecase/*` layer, the **shared** repositories (`SmsRepository`/`ContactRepository`/
   `OnboardingRepository` + interfaces + `RepositoryModule`), SMS/contact **receivers**, the contact

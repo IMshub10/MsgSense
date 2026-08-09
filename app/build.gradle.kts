@@ -89,6 +89,7 @@ tasks.register<VerifyBankRegistryTask>("verifyBankRegistry") {
 dependencies {
     implementation(project(":core"))
     implementation(project(":ner"))
+    implementation(project(":classifier"))
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

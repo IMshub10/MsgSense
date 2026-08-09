@@ -1,7 +1,7 @@
-package com.summer.core.classifier
+package com.summer.classifier
 
 import com.summer.core.android.device.util.DeviceTierEvaluator
-import com.summer.core.android.sms.processor.SmsBatchProcessor
+import com.summer.classifier.SmsBatchProcessor
 import com.summer.core.data.local.preference.PreferenceKey
 import com.summer.core.data.local.preference.SharedPreferencesManager
 import com.summer.core.domain.model.SmsBatchResult

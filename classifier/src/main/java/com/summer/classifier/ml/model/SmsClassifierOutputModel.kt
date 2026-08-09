@@ -1,4 +1,4 @@
-package com.summer.core.ml.model
+package com.summer.classifier.ml.model
 
 data class SmsClassifierOutputModel(
     val importanceScore: Int,

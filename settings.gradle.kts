@@ -23,4 +23,5 @@ rootProject.name = "NotifAI"
 include(":app")
 include(":core")
 include(":ner")
+include(":classifier")
 include(":baselineprofile")

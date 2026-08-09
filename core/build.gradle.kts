@@ -67,10 +67,6 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
 
-    //ML
-    implementation(libs.onnxruntime.android.vlatestrelease)
-    implementation(libs.opennlp.tools)  // or the latest version
-
     //Room
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)

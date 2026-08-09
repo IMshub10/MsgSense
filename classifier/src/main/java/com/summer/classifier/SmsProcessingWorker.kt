@@ -1,4 +1,4 @@
-package com.summer.core.android.sms.service
+package com.summer.classifier
 
 import android.content.Context
 import android.content.pm.ServiceInfo
@@ -13,7 +13,7 @@ import com.summer.core.android.notification.AppNotificationManager
 import com.summer.core.android.notification.AppNotificationManager.Companion.NOTIFICATION_ID_SMS_PROCESSING
 import com.summer.core.android.sms.model.SmsProcessingError
 import com.summer.core.android.sms.model.SmsProcessingStatus
-import com.summer.core.classifier.ClassifySmsUseCase
+import com.summer.classifier.ClassifySmsUseCase
 import com.summer.core.domain.model.SmsBatchResult
 import com.summer.core.worker.WorkerExecution
 import dagger.assisted.Assisted
