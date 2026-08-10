@@ -1,4 +1,4 @@
-package com.summer.core.banking
+package com.summer.core.data.local.dao
 
 import com.summer.core.data.local.entities.BankingTransactionFactEntity
 import com.summer.core.data.local.entities.NerMentionEntity

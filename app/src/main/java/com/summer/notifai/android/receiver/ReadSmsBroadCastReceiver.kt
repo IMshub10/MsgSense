@@ -1,4 +1,4 @@
-package com.summer.notifai.sms.receiver
+package com.summer.notifai.android.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context

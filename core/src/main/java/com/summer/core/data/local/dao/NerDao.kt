@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.summer.core.banking.BankingTransactionFactBuilder
 import com.summer.core.data.local.entities.BankAccountBalanceObservationEntity
 import com.summer.core.data.local.entities.BankAccountEntity
 import com.summer.core.data.local.entities.BankingNerNotificationEntity

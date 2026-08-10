@@ -2,7 +2,7 @@ package com.summer.ner.banking
 
 import android.content.Context
 import android.util.Base64
-import com.summer.core.banking.BankRegistry
+import com.summer.core.util.BankRegistry
 import com.summer.core.data.local.dao.NerDao
 import com.summer.core.data.local.entities.BankAccountBalanceObservationEntity
 import com.summer.core.data.local.entities.BankAccountEntity

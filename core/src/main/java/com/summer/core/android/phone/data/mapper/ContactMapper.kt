@@ -4,7 +4,7 @@ import android.database.Cursor
 import android.provider.ContactsContract
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
-import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.data.local.entities.ContactEntity
 import com.summer.core.android.sms.constants.Constants
 import com.summer.core.util.stripNonDigits
 

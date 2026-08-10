@@ -1,7 +1,7 @@
 package com.summer.notifai.domain.repository
 
 import androidx.paging.PagingSource
-import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.data.local.entities.ContactEntity
 import com.summer.core.data.local.model.ContactInfoInboxModel
 import com.summer.core.data.local.model.ContactMessageInfoModel
 import com.summer.core.domain.model.SearchSectionResult

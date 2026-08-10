@@ -24,7 +24,7 @@ messaging** repositories/use-cases, Android integration, and DI wiring.
   contract its callers depend on. Depends on `:core` only.
 - **`:ner`** — vertical slice for banking intelligence (extract → facts → accounts → read API):
   **workers** (coordinator/realtime/result-notification/account-organization) → **use cases** →
-  **feature repository** (`NerExtractionRepository`, plus the `BankAccountOrganizer` write side),
+  **feature repository** (`BankingRepository`, plus the `BankAccountOrganizer` write side),
   on top of the engine (MobileBERT runtime + Rust tokenizer),
   the process-isolated inference service, and `NerWorkScheduler`. Depends on `:core` only.
 
@@ -97,7 +97,7 @@ with MobileBERT as its engine, not just the model.
 - **Workers:** `NerCoordinatorWorker` (backfill/realtime), result-notification worker,
   `BankAccountOrganizationWorker` + `BankAccountOrganizationScheduler` (moved from `app/banking/`).
 - **Use cases:** NER coordination/extraction domain logic; `NerWorkScheduler` (binds the `:core` `NerScheduler` contract).
-- **Feature repository:** `NerExtractionRepository` — reads (banking UI) + extraction/bank-account writes over `:core` NER DAOs; `:app` banking UI depends on `:ner` and reads through it.
+- **Feature repository:** `BankingRepository` — reads (banking UI) + extraction/bank-account writes over `:core` NER DAOs; `:app` banking UI depends on `:ner` and reads through it.
 - **Account write side:** `BankAccountOrganizer` (facts → `bank_accounts` / links / balance observations), moved from `core/banking/`. Pure Kotlin over Room — no ML — but it is the write-half of this slice's data layer and the coordinator calls `organizePending()` inline after `dao.complete(...)`. `BankingTransactionFactBuilder` (mentions → `banking_transaction_facts`) stayed in `:core`; see §6.7.
 - **Engine + service:** `NerInferenceService`, `NerIpc`, runtime, models, normalizer, preprocessor, `NerServiceClient`; `banking_ner/*` + `rust_tokenizer/` + `jniLibs/`; banking presentation models.
 - NER assets (MobileBERT `.onnx` + `tokenizer.json`); manifest `NerInferenceService` (`process=":ner"`); `onnxruntime`.
@@ -158,7 +158,7 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
 - **Phase 2 — DONE (`:ner` extracted).** Created the `:ner` library module (namespace
   `com.summer.ner`) holding the engine, the isolated-process inference service, the coordinator
   and result-notification workers, `NerWorkScheduler`, the bank-account organizer + its
-  worker/scheduler, and `NerExtractionRepository`. `:app` depends on `:ner` and no longer carries
+  worker/scheduler, and `BankingRepository`. `:app` depends on `:ner` and no longer carries
   the ONNX runtime, the Rust tokenizer build, or the NER asset sync. Packages are now
   `com.summer.ner` (pipeline), `com.summer.ner.tokenizer` (JNI/decoder) and `com.summer.ner.banking`
   (organizing + read repo). `:app:assembleDebug` and all unit tests are green; the merged manifest
@@ -241,11 +241,11 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
    `ISmsRepository.insertSms`. If we'd rather it sit in `:classifier`, repoint it at the
    `ClassifierRepository` / `SmsContentProvider` / `SmsDao` directly.
 6. **Bank-account organizing — RESOLVED: `:ner`.** `BankAccountOrganizer`,
-   `BankingTransactionFactBuilder`, the organization worker/scheduler and `NerExtractionRepository`
+   `BankingTransactionFactBuilder`, the organization worker/scheduler and `BankingRepository`
    all live in `:ner`. It is not ML code, but it is the write-half of the slice's data layer: its only
    input is `NerDao.accountOrganizingCandidates` (completed `ner_runs` ⨝ `banking_transaction_facts`),
    `NerCoordinatorWorker` calls `organizePending()` inline on both the realtime and backfill paths, and
-   `NerExtractionRepository` already injects the organizer. Putting it in `:app` would create a
+   `BankingRepository` already injects the organizer. Putting it in `:app` would create a
    `:ner → :app` cycle; putting it in a peer `:banking` module would need a second cross-module
    contract. `BankRegistry` is the exception and stays in `:core` as shared reference data.
 7. **`BankingTransactionFactBuilder` home.** Left in `:core` next to `NerDao`, which calls it from

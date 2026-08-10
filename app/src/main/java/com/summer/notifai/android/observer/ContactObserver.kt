@@ -1,4 +1,4 @@
-package com.summer.notifai.contacts
+package com.summer.notifai.android.observer
 
 import android.content.Context
 import android.database.ContentObserver
@@ -9,7 +9,7 @@ import android.util.Log
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.summer.core.android.permission.manager.IPermissionManager
 import com.summer.core.android.phone.processor.ContactProcessor
-import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.data.local.entities.ContactEntity
 import com.summer.notifai.di.ContactObserverEntryPoint
 import com.summer.core.exception.MissingPermissionException
 import com.summer.notifai.domain.repository.IContactRepository

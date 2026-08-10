@@ -2,7 +2,7 @@ package com.summer.notifai.di
 
 import com.summer.core.android.notification.AppNotificationManager
 import com.summer.core.android.permission.manager.IPermissionManager
-import com.summer.notifai.sms.SmsInserter
+import com.summer.notifai.android.processor.SmsInserter
 import com.summer.notifai.domain.usecase.IsSenderBlockedUseCase
 import com.summer.core.ner.NerScheduler
 import dagger.hilt.EntryPoint

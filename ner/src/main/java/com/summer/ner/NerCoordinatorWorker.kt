@@ -64,7 +64,8 @@ class NerCoordinatorWorker @AssistedInject constructor(
             outcome = if (isRealtime) processRealtime() else processBackfill(chainId, chainIndex)
             return outcome.result
         } catch (cancelled: CancellationException) {
-            outcome = outcome.copy(result = Result.retry(), exitCause = WorkerExecution.CAUSE_STOPPED)
+            outcome =
+                outcome.copy(result = Result.retry(), exitCause = WorkerExecution.CAUSE_STOPPED)
             throw cancelled
         } finally {
             withContext(NonCancellable) {
@@ -177,22 +178,43 @@ class NerCoordinatorWorker @AssistedInject constructor(
             val code = error.javaClass.simpleName
             if (attempts >= NerConstants.MAX_ATTEMPTS) {
                 dao.markTerminalFailure(
-                    pending.extractionId, System.currentTimeMillis(), code, error.message?.take(200),
+                    pending.extractionId,
+                    System.currentTimeMillis(),
+                    code,
+                    error.message?.take(200),
                 )
                 scheduler.enqueueNextRealtime()
-                RunOutcome(Result.success(), 0, WorkerExecution.CAUSE_FAILURE, code, error.message?.take(200))
+                RunOutcome(
+                    Result.success(),
+                    0,
+                    WorkerExecution.CAUSE_FAILURE,
+                    code,
+                    error.message?.take(200)
+                )
             } else {
                 dao.markPendingFailure(
-                    pending.extractionId, System.currentTimeMillis(), code, error.message?.take(200),
+                    pending.extractionId,
+                    System.currentTimeMillis(),
+                    code,
+                    error.message?.take(200),
                 )
-                RunOutcome(Result.retry(), 0, WorkerExecution.CAUSE_FAILURE, code, error.message?.take(200))
+                RunOutcome(
+                    Result.retry(),
+                    0,
+                    WorkerExecution.CAUSE_FAILURE,
+                    code,
+                    error.message?.take(200)
+                )
             }
         } finally {
             client.close()
         }
     }
 
-    private suspend fun prepareRealtimeNotification(pending: PendingNerSms, notificationId: Int): Boolean {
+    private suspend fun prepareRealtimeNotification(
+        pending: PendingNerSms,
+        notificationId: Int
+    ): Boolean {
         val now = System.currentTimeMillis()
         if (pending.isBlocked) {
             dao.updateNotificationState(
@@ -209,7 +231,11 @@ class NerCoordinatorWorker @AssistedInject constructor(
             return false
         }
         dao.updateNotificationState(
-            pending.extractionId, notificationId, NerConstants.NOTIFICATION_STATE_PROGRESS, null, now,
+            pending.extractionId,
+            notificationId,
+            NerConstants.NOTIFICATION_STATE_PROGRESS,
+            null,
+            now,
         )
         return try {
             setForeground(createForegroundInfo(notificationId))
@@ -225,7 +251,10 @@ class NerCoordinatorWorker @AssistedInject constructor(
     }
 
     private suspend fun processBackfill(chainId: String, chainIndex: Int): RunOutcome {
-        dao.enqueueMissingBackfill(NerPipelineMetadata.PIPELINE_FINGERPRINT, System.currentTimeMillis())
+        dao.enqueueMissingBackfill(
+            NerPipelineMetadata.PIPELINE_FINGERPRINT,
+            System.currentTimeMillis()
+        )
         val ranAsForeground = try {
             setForeground(createBackfillForegroundInfo())
             true
@@ -301,7 +330,10 @@ class NerCoordinatorWorker @AssistedInject constructor(
         } finally {
             client.close()
             if (dao.hasRealtimeWork()) scheduler.enqueueNextRealtime()
-            else if (dao.hasPending()) scheduler.resumeBackfillAfterQuietPeriod(chainId, chainIndex + 1)
+            else if (dao.hasPending()) scheduler.resumeBackfillAfterQuietPeriod(
+                chainId,
+                chainIndex + 1
+            )
         }
         val exitCause = when {
             isStopped -> WorkerExecution.CAUSE_STOPPED
@@ -315,7 +347,11 @@ class NerCoordinatorWorker @AssistedInject constructor(
     private fun createForegroundInfo(notificationId: Int): ForegroundInfo {
         val notification = notificationManager.createBankingProgressNotification()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ForegroundInfo(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE)
+            ForegroundInfo(
+                notificationId,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
+            )
         } else {
             ForegroundInfo(notificationId, notification)
         }
@@ -326,7 +362,11 @@ class NerCoordinatorWorker @AssistedInject constructor(
     private fun createBackfillForegroundInfo(): ForegroundInfo {
         val notification = notificationManager.createBankingProgressNotification()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ForegroundInfo(BACKFILL_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            ForegroundInfo(
+                BACKFILL_NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
         } else {
             ForegroundInfo(BACKFILL_NOTIFICATION_ID, notification)
         }

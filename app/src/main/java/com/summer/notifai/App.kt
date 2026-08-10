@@ -12,9 +12,9 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.summer.core.BaseApp
 import com.summer.core.android.sms.util.SendSmsActions
-import com.summer.notifai.contacts.ContactObserver
+import com.summer.notifai.android.observer.ContactObserver
 import com.summer.notifai.di.ContactObserverDepsEntryPoint
-import com.summer.notifai.sms.receiver.SentSmsReceiver
+import com.summer.notifai.android.receiver.SentSmsReceiver
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject

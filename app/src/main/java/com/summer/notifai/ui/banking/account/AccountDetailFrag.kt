@@ -15,8 +15,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.summer.core.banking.BalanceRefreshMethod
-import com.summer.core.banking.BankRegistry
+import com.summer.core.util.BalanceRefreshMethod
+import com.summer.core.util.BankRegistry
 import com.summer.core.data.model.BankAccount
 import com.summer.core.data.model.BankingTransaction
 import com.summer.core.ui.BaseFragment
@@ -75,7 +75,7 @@ class AccountDetailFrag : BaseFragment<FragAccountDetailBinding>() {
         refresh.setOnClickListener { service?.let(::confirmRefresh) }
     }
 
-    private fun confirmRefresh(service: com.summer.core.banking.BankService) {
+    private fun confirmRefresh(service: com.summer.core.util.BankService) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.refresh_reported_balance)
             .setMessage("${service.displayName}\n\n${service.eligibilityNote}\n\nYou will confirm the request in the system dialer or SMS app. The balance updates only after a new bank SMS arrives.")

@@ -19,7 +19,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NerExtractionRepository @Inject constructor(
+class BankingRepository @Inject constructor(
     private val dao: NerDao,
     private val accountOrganizer: BankAccountOrganizer,
 ) {

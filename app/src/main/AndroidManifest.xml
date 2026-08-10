@@ -33,7 +33,7 @@
         android:theme="@style/Theme.NotifAI"
         tools:targetApi="36">
         <receiver
-            android:name="com.summer.notifai.sms.receiver.DeliveredSmsReceiver"
+            android:name="com.summer.notifai.android.receiver.DeliveredSmsReceiver"
             android:exported="true"
             tools:ignore="ExportedReceiver">
             <intent-filter>
@@ -41,7 +41,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name="com.summer.notifai.sms.receiver.ReadSmsBroadcastReceiver"
+            android:name="com.summer.notifai.android.receiver.ReadSmsBroadcastReceiver"
             android:exported="true"
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter>
@@ -50,7 +50,7 @@
             </intent-filter>
         </receiver> <!-- BroadcastReceiver that listens for incoming MMS messages -->
         <receiver
-            android:name="com.summer.notifai.sms.receiver.MMSBroadCastReceiver"
+            android:name="com.summer.notifai.android.receiver.MMSBroadCastReceiver"
             android:exported="false"
             android:permission="android.permission.BROADCAST_WAP_PUSH">
             <intent-filter>
@@ -91,7 +91,7 @@
         </activity>
 
         <service
-            android:name=".service.SendSmsService"
+            android:name=".android.service.SendSmsService"
             android:exported="true"
             android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
             <intent-filter>

@@ -1,4 +1,4 @@
-package com.summer.notifai.sms
+package com.summer.notifai.android.processor
 
 import android.content.Context
 import android.content.Intent

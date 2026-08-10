@@ -1,4 +1,4 @@
-package com.summer.core.banking
+package com.summer.core.util
 
 import java.util.Locale
 import java.time.LocalDate

@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.summer.core.data.model.BankAccount
-import com.summer.ner.banking.NerExtractionRepository
+import com.summer.ner.banking.BankingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class AccountDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: NerExtractionRepository,
+    private val repository: BankingRepository,
 ) : ViewModel() {
     val accountId: Long = checkNotNull(savedStateHandle["accountId"])
     val account = repository.observeAccount(accountId)

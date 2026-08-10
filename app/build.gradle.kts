@@ -81,7 +81,7 @@ roborazzi {
 tasks.register<VerifyBankRegistryTask>("verifyBankRegistry") {
     group = "verification"
     description = "Verify local bank registry coverage and actionable-service safety"
-    registrySource.set(rootProject.layout.projectDirectory.file("core/src/main/java/com/summer/core/banking/BankRegistry.kt"))
+    registrySource.set(rootProject.layout.projectDirectory.file("core/src/main/java/com/summer/core/util/BankRegistry.kt"))
     logosDirectory.set(rootProject.layout.projectDirectory.dir("logos"))
     reportFile.set(layout.buildDirectory.file("reports/bank-registry.txt"))
 }

@@ -1,6 +1,6 @@
 package com.summer.notifai.ui.datamodel.mapper
 
-import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.data.local.entities.ContactEntity
 import com.summer.notifai.ui.datamodel.NewContactDataModel
 
 object NewContactMapper {

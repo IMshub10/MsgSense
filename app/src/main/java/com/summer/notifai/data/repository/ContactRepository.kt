@@ -3,7 +3,7 @@ package com.summer.notifai.data.repository
 import androidx.paging.PagingSource
 import com.summer.core.R
 import com.summer.core.data.local.dao.ContactDao
-import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.data.local.entities.ContactEntity
 import com.summer.core.android.sms.constants.Constants.SEARCH_SECTION_MAX_COUNT
 import com.summer.notifai.domain.repository.IContactRepository
 import com.summer.core.data.local.model.ContactInfoInboxModel

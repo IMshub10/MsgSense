@@ -1,4 +1,4 @@
-package com.summer.notifai.service
+package com.summer.notifai.android.service
 
 import android.app.Service
 import android.content.Intent

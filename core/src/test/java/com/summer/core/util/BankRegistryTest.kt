@@ -1,4 +1,4 @@
-package com.summer.core.banking
+package com.summer.core.util
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

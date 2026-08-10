@@ -1,4 +1,4 @@
-package com.summer.core.android.phone.data.entity
+package com.summer.core.data.local.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

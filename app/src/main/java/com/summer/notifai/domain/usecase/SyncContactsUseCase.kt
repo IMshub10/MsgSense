@@ -1,7 +1,7 @@
 package com.summer.notifai.domain.usecase
 
 import com.summer.core.data.local.dao.ContactDao
-import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.data.local.entities.ContactEntity
 import com.summer.core.data.local.preference.PreferenceKey
 import com.summer.core.data.local.preference.SharedPreferencesManager
 import com.summer.core.util.ResultState

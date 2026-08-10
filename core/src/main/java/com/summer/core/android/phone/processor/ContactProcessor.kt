@@ -3,7 +3,7 @@ package com.summer.core.android.phone.processor
 import android.content.Context
 import android.provider.ContactsContract
 import com.summer.core.android.phone.data.mapper.ContactMapper
-import com.summer.core.android.phone.data.entity.ContactEntity
+import com.summer.core.data.local.entities.ContactEntity
 import com.summer.core.util.ResultState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

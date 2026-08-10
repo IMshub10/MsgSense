@@ -19,12 +19,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class NerExtractionRepositoryTest {
+class BankingRepositoryTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val database = Room.inMemoryDatabaseBuilder(context, SmsDatabase::class.java)
         .allowMainThreadQueries()
         .build()
-    private val repository = NerExtractionRepository(
+    private val repository = BankingRepository(
         database.nerDao(),
         BankAccountOrganizer(context, database.nerDao()),
     )

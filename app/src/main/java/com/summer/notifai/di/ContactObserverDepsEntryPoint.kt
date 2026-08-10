@@ -1,6 +1,6 @@
 package com.summer.notifai.di
 
-import com.summer.notifai.contacts.ContactObserver
+import com.summer.notifai.android.observer.ContactObserver
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent

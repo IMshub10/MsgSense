@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.summer.core.data.local.model.NerProcessingSummary
 import com.summer.core.data.model.BankingTransaction
-import com.summer.ner.banking.NerExtractionRepository
+import com.summer.ner.banking.BankingRepository
 import com.summer.core.ner.NerScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TransactionListViewModel @Inject constructor(
-    repository: NerExtractionRepository,
+    repository: BankingRepository,
     nerScheduler: NerScheduler,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
