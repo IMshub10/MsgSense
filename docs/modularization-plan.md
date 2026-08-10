@@ -67,7 +67,7 @@ DAOs.
 ### `:core` (pure infra — stays / shrinks to this)
 - **DB:** `data/local/{dao,entities,db,model,preference}`, `SmsDatabase`, migrations, schemas, `DatabaseModule`.
 - **SMS data source:** `ISmsContentProvider`/`SmsContentProvider`, `SmsMapper`, `SmsInfoModel`, SMS constants/util, `SmsSender` (telephony wrapper).
-- **Infra:** `notification/*`, `permission/*`, `device/*` (`DeviceTierEvaluator`), `util/*`, network/Retrofit, base UI + `DataBindingAdapters`.
+- **Infra:** `notification/*`, `permission/*`, `device/*` (`DeviceTierEvaluator`), `util/*`, base UI + `DataBindingAdapters`.
 - **Shared domain models** used by more than one module (e.g. `SmsBatchResult`, `FetchResult`, `SearchSection*`, `SmsImportanceType`).
 - **Shared reference data:** `BankRegistry` (+ `BalanceRefreshMethod`) — inert bank metadata with no behaviour, read by `:ner` (`BankAccountOrganizer.resolve`/`resolveSender`) *and* `:app` UI (`AccountDetailFrag` balance-refresh action). Keeps the buildSrc `verifyBankRegistry` source path stable.
 - **`BankingTransactionFactBuilder`** — called from inside `NerDao.complete()`'s transaction, so it stays with the DAO (§6.7).
@@ -206,6 +206,26 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
     `SmsClassification`) followed the engine into `:classifier` as `com.summer.classifier`.
     Contract and implementation finally live in the same module.
 
+- **Phase 5 — DONE (`:core` slimmed).** `:core` is now 88 Kotlin files of DB, data sources,
+  notifications, permissions, device/utils, base UI, shared models and the `NerScheduler` contract.
+  Every module builds on its own, all androidTest source sets compile, and all unit tests pass.
+  - **Dependencies dropped as unused.** The entire networking stack — Retrofit, its serialization
+    converter, OkHttp (BOM, core, logging interceptor), `kotlinx-serialization-json` and the Gson
+    converter — had no callers anywhere in the repo; there is no networking code in any module.
+    `:core`'s androidTest also dropped Espresso and `room-testing`, neither of which it used.
+  - **`api` leaks fixed.** `:core` was exposing LiveData, `coroutines-android`, Crashlytics and
+    `hilt-work` as `api` while not using them itself, so `:app`/`:classifier`/`:ner` were compiling
+    against them without declaring them. Each consumer now declares what it actually uses. What
+    stays `api` on `:core` is what genuinely appears in its public surface: the base UI stack
+    (`core-ktx`, `appcompat`, `material`, databinding), `coroutines-core` and `paging-runtime` (DAOs
+    hand back `Flow` and `PagingSource`), and `work-runtime` (`WorkerExecution` and
+    `SmsProcessingError` expose `WorkInfo`). Room stays `implementation` — no production code
+    outside `:core` touches it, only the `:app`/`:ner` instrumentation tests, which now declare
+    `room-runtime` themselves.
+  - **Dead code removed.** `DummyWorker` (a stub that only logged), `ServiceUtils`, `LauncherUtils`
+    and `SmsInsertionFailedException` had zero references anywhere; all four were orphans from
+    early-2025 work. Deleting `DummyWorker` is what let `hilt-work` leave `:core` entirely.
+
 ---
 
 ## 6. Open points (deferred decisions)
@@ -231,6 +251,16 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
 7. **`BankingTransactionFactBuilder` home.** Left in `:core` next to `NerDao`, which calls it from
    inside the `complete()` transaction. To finish moving banking rules out of `:core`, `complete()`
    would need to accept a fact-builder lambda so `:ner` supplies the mapping. Deferred.
+8. **`ChatSessionTracker` home.** Sits in `:core/di` and holds which chat the user currently has
+   open, so notifications can be suppressed. `AppNotificationManager` (`:core`) reads it and
+   `SmsInboxFrag` (`:app`) writes it — genuinely shared session state, but more app state than
+   infrastructure. Left alone in Phase 5.
+9. **Per-feature repackaging in `:app`.** The stack moved in Phase 4 kept its old `:core` layer
+   layout (`domain/usecase`, `domain/repository`, `data/repository`). Re-cutting it into `inbox/`,
+   `search/`, `contacts/`, `onboarding/` packages is cosmetic and crosses no module boundary.
+10. **Unreferenced members inside live files.** Phase 5 deleted whole dead files only.
+    `UiUtils.getScreenHeightIntDp` / `Int.pxToDp` / `Int.dp` and the leftover `main()` in
+    `ArithmeticUtils.kt` also have no callers, but sit alongside used code.
 
 ---
 
@@ -244,8 +274,8 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
   layout rather than being re-cut into per-feature packages — regrouping `domain/usecase` into
   `inbox/`, `search/`, `contacts/`, `onboarding/` is a follow-up pass that touches no module
   boundaries.
-- **Phase 5 — Slim `:core`.** Confirm `:core` = DB + infra + contracts only; drop unused deps
-  (`onnxruntime`, ML/NER libs); per-module build checks + tests.
+- **Phase 5 — DONE.** `:core` slimmed; see §5 for the dependencies dropped, the `api` leaks pushed
+  down to the consumers, and the dead code removed. **The split is complete.**
 
 ### Validation
 `./gradlew :core:assembleDebug :classifier:assembleDebug :ner:assembleDebug :app:assembleDebug`;
