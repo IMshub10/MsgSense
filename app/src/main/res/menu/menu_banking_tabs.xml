@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/banking_dashboard" android:icon="@drawable/ic_banking_dashboard" android:title="@string/banking_dashboard" />
+    <item android:id="@+id/banking_accounts" android:icon="@drawable/ic_wallet_24x24" android:title="@string/accounts" />
+    <item android:id="@+id/banking_insights" android:icon="@drawable/ic_banking_insights" android:title="@string/insights" />
+</menu>

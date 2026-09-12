@@ -117,9 +117,9 @@
             android:layout_marginTop="@dimen/spacing_x_small"
             android:alpha="0.8"
             android:background="@drawable/shape_color_surface_radius_tiny"
-            android:backgroundTint="?boxBackground"
+            android:backgroundTint="?attr/colorSurfaceVariant"
             android:padding="@dimen/spacing_x_small"
-            android:textColor="?label"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
@@ -136,7 +136,7 @@
             android:layout_marginHorizontal="@dimen/spacing_x_small"
             android:layout_marginBottom="@dimen/spacing_small"
             android:background="@drawable/shape_color_surface_radius_medium"
-            android:backgroundTint="?colorChatBox"
+            android:backgroundTint="?attr/colorSurfaceVariant"
             android:hint="@string/enter_message"
             android:maxLines="5"
             android:paddingVertical="@dimen/spacing_x_medium"
@@ -144,8 +144,8 @@
             android:paddingEnd="@dimen/spacing_huge"
             android:singleLine="false"
             android:text="@={viewModel.messageText}"
-            android:textColor="?label"
-            android:textColorHint="@color/grey"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             app:layout_constraintBottom_toBottomOf="parent" />
 
         <androidx.appcompat.widget.AppCompatImageButton

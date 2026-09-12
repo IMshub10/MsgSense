@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Telephony
+import android.view.WindowManager
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -13,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.summer.core.android.permission.manager.IPermissionManager
-import com.summer.core.di.PrewarmManager
+import com.summer.notifai.di.PrewarmManager
 import com.summer.core.ui.BaseActivity
 import com.summer.core.util.showShortToast
 import com.summer.notifai.R
@@ -72,6 +73,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             .findFragmentById(R.id.fcv_main_navHost) as? NavHostFragment
         navController = navHostFragment?.navController
             ?: throw IllegalStateException("NavController is null")
+        navController?.addOnDestinationChangedListener { _, destination, _ ->
+            val secure = destination.id in setOf(
+                R.id.bankingHomeFrag,
+                R.id.accountDetailFrag,
+                R.id.transactionListFrag,
+                R.id.transactionDetailFrag,
+                R.id.transactionEditFrag,
+            )
+            if (secure) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        }
     }
 
     /**
@@ -135,4 +150,3 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         startActivity(intent)
     }
 }
-

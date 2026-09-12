@@ -17,7 +17,7 @@
         android:gravity="center"
         android:padding="@dimen/spacing_x_small"
         android:text="@{label}"
-        android:textColor="?colorOnPrimary"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="12sp"
         tools:text="Wednesday, 24th February" />
 </layout>

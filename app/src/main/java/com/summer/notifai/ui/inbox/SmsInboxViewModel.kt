@@ -16,11 +16,11 @@ import com.summer.core.android.sms.constants.Constants
 import com.summer.core.android.sms.constants.Constants.SMS_LIST_PAGE_SIZE
 import com.summer.core.data.local.entities.SenderType
 import com.summer.core.data.local.model.ContactInfoInboxModel
-import com.summer.core.domain.usecase.BlockSenderUseCase
-import com.summer.core.domain.usecase.DeleteSmsByIdsUseCase
-import com.summer.core.domain.usecase.GetContactInfoInboxModelUseCase
-import com.summer.core.domain.usecase.MarkSmsAsReadForSenderUseCase
-import com.summer.core.domain.usecase.SendSmsUseCase
+import com.summer.notifai.domain.usecase.BlockSenderUseCase
+import com.summer.notifai.domain.usecase.DeleteSmsByIdsUseCase
+import com.summer.notifai.domain.usecase.GetContactInfoInboxModelUseCase
+import com.summer.notifai.domain.usecase.MarkSmsAsReadForSenderUseCase
+import com.summer.notifai.domain.usecase.SendSmsUseCase
 import com.summer.core.ui.model.SmsImportanceType
 import com.summer.core.util.isValidPhoneNumber
 import com.summer.notifai.ui.datamodel.SmsInboxListItem
