@@ -127,9 +127,15 @@ What the code does **today** (post removal of the app-startup trigger).
 
 ### Triggers (external entry points)
 - **Classification success** — classifier orchestration → `nerScheduler.enqueueBackfill()`.
-- **Banking screen entry** — `BankingHomeViewModel` / `TransactionListViewModel` → `enqueueBackfill()`.
+- **Daily backstop** — `NerBackfillBackstopWorker` (a `PeriodicWorkRequest`, 1 day,
+  registered once from `App.onCreate` via `NerBackfillBackstopWorker.schedule(this)`) →
+  `NerWorkScheduler.enqueueBackfill()`. The worker is just another trigger source (like
+  classification), so `enqueueBackfill()`'s `KEEP` on the shared backfill name still guarantees a
+  single drain lane. Catches banking rows that were classified but never drained.
 - **Incoming banking SMS (realtime)** — `ReadSmsBroadCastReceiver` → `enqueueRealtime(sms)`.
 - ~~App startup~~ — **removed**.
+- ~~Banking screen entry~~ — **removed** (`BankingHomeViewModel` / `TransactionListViewModel` no
+  longer drive the drain; the daily backstop replaces this UI-driven trigger).
 
 External `enqueueBackfill()` uses WorkManager `KEEP` (dedups into an in-progress drain);
 self-continuation uses `APPEND_OR_REPLACE` (baton pass).
@@ -232,8 +238,11 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
 
 1. **Hybrid drain strategy.** Keep the single drain-to-empty loop for now; later, drain-to-empty
    in the **foreground** + WorkManager-chunked in the **background**.
-2. **Cron / periodic backup trigger.** Decide whether we want a periodic sweep as a safety net
-   (currently none).
+2. **Cron / periodic backup trigger — RESOLVED.** Added a once-a-day `NerBackfillBackstopWorker`
+   (`PeriodicWorkRequest`), registered via its own `schedule(context)` from
+   `App.onCreate` (kept out of `NerWorkScheduler`). The worker re-triggers the normal
+   `enqueueBackfill()` path, so it shares the `KEEP` backfill lock (single drain lane). Dropped the
+   two banking-screen-entry triggers in the same change.
 3. **NER model eviction (backfill).** Consider a **~120s idle warm-hold** so consecutive backfill
    runs reuse the loaded model (realtime stays load → compute → unload).
 4. **`:classifier` → `:ner` communication.** Interface-via-`:core` for now; revisit later.

@@ -14,6 +14,7 @@ object WorkerExecution {
 
     const val MODE_REALTIME = "REALTIME"
     const val MODE_BACKFILL = "BACKFILL"
+    const val MODE_BACKSTOP = "BACKSTOP"
 
     const val RESULT_RUNNING = "RUNNING"
     const val RESULT_SUCCESS = "SUCCESS"

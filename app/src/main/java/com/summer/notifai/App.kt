@@ -12,6 +12,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.summer.core.BaseApp
 import com.summer.core.android.sms.util.SendSmsActions
+import com.summer.ner.NerBackfillBackstopWorker
 import com.summer.notifai.android.observer.ContactObserver
 import com.summer.notifai.di.ContactObserverDepsEntryPoint
 import com.summer.notifai.android.receiver.SentSmsReceiver
@@ -33,6 +34,7 @@ class App : BaseApp(), Configuration.Provider {
         if (BuildConfig.DEBUG) setUpStrictMode()
         setUpSyncContacts()
         registerSentSmsReceiver()
+        NerBackfillBackstopWorker.schedule(this)
     }
 
     override val workManagerConfiguration: Configuration

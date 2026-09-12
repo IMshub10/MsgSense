@@ -6,7 +6,6 @@ import com.summer.core.data.model.BankingOverview
 import com.summer.core.data.model.CategoryTotal
 import com.summer.core.data.model.CurrencyTotals
 import com.summer.ner.banking.BankingRepository
-import com.summer.core.ner.NerScheduler
 import com.summer.ner.banking.BankAccountOrganizationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.stateIn
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class BankingHomeViewModel @Inject constructor(
     private val repository: BankingRepository,
-    nerScheduler: NerScheduler,
     accountOrganizationScheduler: BankAccountOrganizationScheduler,
 ) : ViewModel() {
     val overview = repository.observeOverview()
@@ -31,7 +29,6 @@ class BankingHomeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList<CurrencyTotals>() to emptyList<CategoryTotal>())
 
     init {
-        nerScheduler.enqueueBackfill()
         accountOrganizationScheduler.enqueue()
     }
 

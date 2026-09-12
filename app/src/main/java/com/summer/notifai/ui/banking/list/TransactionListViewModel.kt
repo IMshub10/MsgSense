@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.summer.core.data.local.model.NerProcessingSummary
 import com.summer.core.data.model.BankingTransaction
 import com.summer.ner.banking.BankingRepository
-import com.summer.core.ner.NerScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +15,6 @@ import javax.inject.Inject
 @HiltViewModel
 class TransactionListViewModel @Inject constructor(
     repository: BankingRepository,
-    nerScheduler: NerScheduler,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(Filter.ALL)
@@ -45,10 +43,6 @@ class TransactionListViewModel @Inject constructor(
             filtersApplied = query.isNotBlank() || filter != Filter.ALL,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
-
-    init {
-        nerScheduler.enqueueBackfill()
-    }
 
     fun setQuery(value: String) {
         query.value = value.trim()
