@@ -23,12 +23,12 @@
             android:layout_width="@dimen/spacing_xx_large"
             android:layout_height="@dimen/spacing_xx_large"
             android:background="@drawable/shape_circle_color_surface"
-            android:backgroundTint="?colorOnSecondary"
+            android:backgroundTint="?attr/colorPrimaryContainer"
             android:padding="@dimen/spacing_x_small"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_contact_24x24"
-            app:tint="?colorOnPrimary" />
+            app:tint="?attr/colorOnPrimaryContainer" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tv_itemSmsMessage_senderName"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_tiny"
             android:background="@drawable/shape_color_surface_radius_x_medium"
-            android:backgroundTint="?boxBackground"
+            android:backgroundTint="?attr/colorSurfaceVariant"
             android:padding="@dimen/spacing_x_small"
             app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="@+id/guideline"
@@ -96,7 +96,7 @@
             android:layout_marginStart="@dimen/spacing_small"
             android:layout_marginTop="@dimen/spacing_x_medium"
             android:text="@{model.date}"
-            android:textColor="?colorOnPrimary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@+id/cl_itemSmsMessage_container"
             app:layout_constraintEnd_toEndOf="parent"

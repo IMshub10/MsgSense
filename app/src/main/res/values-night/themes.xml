@@ -3,19 +3,24 @@
     <style name="Theme.NotifAI" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/white_hole</item>
+        <item name="colorPrimaryContainer">@color/background_dark</item>
+        <item name="colorOnPrimaryContainer">@color/primaryLight</item>
         <item name="colorPrimaryLight">@color/primaryLight</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
         <item name="colorPrimaryVariant">@color/grey_dark</item>
-        <item name="colorOnPrimary">@color/grey</item>
-
-        <item name="colorSurface">@color/black</item>
-        <item name="colorOnSurface">@color/black</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/on_surface_dark</item>
+        <item name="colorSurfaceVariant">@color/surface_variant_dark</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant_dark</item>
+        <item name="colorOutline">@color/outline_dark</item>
+        <item name="colorOutlineVariant">@color/outline_variant_dark</item>
 
         <item name="colorError">@color/red_dark</item>
         <item name="colorAccent">@color/blue_link</item>
 
-        <item name="android:colorBackground">@color/black</item>
-        <item name="android:windowBackground">@color/black</item>
+        <item name="android:colorBackground">@color/surface_dark</item>
+        <item name="android:windowBackground">@color/surface_dark</item>
 
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/blue_grey_dark</item>
@@ -32,12 +37,12 @@
         <item name="colorLink">@color/blue_link</item>
         <item name="android:textColorHint">?attr/labelTertiary</item>
 
-        <item name="label">@color/white</item>
-        <item name="labelSecondary">@color/opaque_0.6</item>
-        <item name="labelTertiary">@color/opaque_0.3</item>
+        <item name="label">@color/on_surface_dark</item>
+        <item name="labelSecondary">@color/on_surface_variant_dark</item>
+        <item name="labelTertiary">@color/outline_dark</item>
         <item name="colorGreen">@color/green_dark</item>
-        <item name="boxBackground">@color/background_dark</item>
-        <item name="tagBackground">@color/grey_dark</item>
+        <item name="boxBackground">@color/surface_dark</item>
+        <item name="tagBackground">@color/surface_variant_dark</item>
         <item name="surfaceBackground">@color/circle_background_dark</item>
         <item name="cardBackground">@color/grey_darker</item>
 
@@ -57,6 +62,10 @@
         <item name="toolbarStyle">@style/ToolbarStyle</item>
 
         <item name="android:navigationIcon">@drawable/ic_navigation_back_light</item>
+        <item name="textInputStyle">@style/AppTextInputLayout</item>
+        <item name="chipStyle">@style/AppChoiceChip</item>
+        <item name="materialButtonStyle">@style/AppPrimaryButton</item>
+        <item name="materialCardViewStyle">@style/AppCard</item>
 
         <item name="colorChatBox">@color/grey_darker</item>
         <item name="colorSmsSelected">@color/colorSelectedMessageDark</item>

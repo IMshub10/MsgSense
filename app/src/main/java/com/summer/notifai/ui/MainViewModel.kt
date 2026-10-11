@@ -1,8 +1,8 @@
 package com.summer.notifai.ui
 
 import androidx.lifecycle.ViewModel
-import com.summer.core.domain.repository.IOnboardingRepository
-import com.summer.core.domain.usecase.ShouldShowDefaultSmsPromptUseCase
+import com.summer.notifai.domain.repository.IOnboardingRepository
+import com.summer.notifai.domain.usecase.ShouldShowDefaultSmsPromptUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

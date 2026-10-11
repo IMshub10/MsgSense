@@ -10,4 +10,5 @@ plugins {
     alias(libs.plugins.androidx.navigation.safe.args) apply false
     alias(libs.plugins.android.test) apply false
     alias(libs.plugins.baselineprofile) apply false
+    alias(libs.plugins.roborazzi) apply false
 }

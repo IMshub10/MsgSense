@@ -5,7 +5,7 @@ import android.view.View
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.summer.core.domain.repository.IOnboardingRepository
+import com.summer.notifai.domain.repository.IOnboardingRepository
 import com.summer.notifai.R
 import com.summer.notifai.databinding.FragUserAgreementBinding
 import com.summer.notifai.ui.onboarding.OnboardingViewModel
@@ -39,6 +39,12 @@ class UserAgreementFrag : BaseFragment<FragUserAgreementBinding>() {
 
     private fun listeners() {
         with(mBinding) {
+            fun updateActionButton() {
+                if (!fragUserAgreementScrollView.canScrollVertically(1)) {
+                    fragUserAgreementActionButton.text = getString(R.string.agree_to_use)
+                }
+            }
+
             fragUserAgreementActionButton.setOnClickListener {
                 if (fragUserAgreementActionButton.text == getString(R.string.agree_to_use)) {
                     onboardingViewModel.onOptionalDataSharingDisabled()
@@ -48,11 +54,10 @@ class UserAgreementFrag : BaseFragment<FragUserAgreementBinding>() {
                     scrollToBottom()
                 }
             }
-            fragUserAgreementScrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, _, _, _, _ ->
-                if (v.getChildAt(0).bottom <= (v.height + v.scrollY)) {
-                    fragUserAgreementActionButton.text = getString(R.string.agree_to_use)
-                }
+            fragUserAgreementScrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, _, _, _ ->
+                updateActionButton()
             })
+            fragUserAgreementScrollView.post { updateActionButton() }
         }
     }
 

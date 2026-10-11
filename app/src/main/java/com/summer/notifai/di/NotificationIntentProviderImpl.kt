@@ -56,4 +56,28 @@ class NotificationIntentProviderImpl @Inject constructor(
             .setDestination(R.id.splashFragment)
             .createPendingIntent()
     }
+
+    override fun provideAppHomePendingIntent(): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        return PendingIntent.getActivity(
+            context,
+            REQUEST_CODE_BANKING_NOTIFICATION,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    override fun provideBankingTransactionPendingIntent(extractionId: Long): PendingIntent =
+        NavDeepLinkBuilder(context)
+            .setGraph(R.navigation.nav_main)
+            .setDestination(R.id.transactionDetailFrag)
+            .setArguments(android.os.Bundle().apply { putLong("extractionId", extractionId) })
+            .setComponentName(MainActivity::class.java)
+            .createPendingIntent()
+
+    companion object {
+        private const val REQUEST_CODE_BANKING_NOTIFICATION = 10002
+    }
 }

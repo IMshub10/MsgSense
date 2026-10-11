@@ -12,8 +12,8 @@ import androidx.paging.insertHeaderItem
 import androidx.paging.map
 import com.summer.core.android.sms.constants.Constants.CONTACT_LIST_PAGE_SIZE
 import com.summer.core.android.sms.constants.Constants.SEARCH_NEW_CONTACT_ID
-import com.summer.core.domain.repository.ISmsRepository
-import com.summer.core.domain.usecase.GetContactListWithFilterUseCase
+import com.summer.notifai.domain.repository.ISmsRepository
+import com.summer.notifai.domain.usecase.GetContactListWithFilterUseCase
 import com.summer.core.util.CountryCodeProvider
 import com.summer.core.util.isValidPhoneNumber
 import com.summer.notifai.ui.datamodel.NewContactDataModel

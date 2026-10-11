@@ -9,10 +9,10 @@ import androidx.paging.map
 import com.summer.core.android.sms.constants.Constants.CONTACT_LIST_PAGE_SIZE
 import com.summer.core.android.sms.constants.Constants.SMS_LIST_PAGE_SIZE
 import com.summer.core.domain.model.SearchSectionId
-import com.summer.core.domain.repository.ISmsRepository
-import com.summer.core.domain.usecase.SearchContactsPagingUseCase
-import com.summer.core.domain.usecase.SearchConversationsPagingUseCase
-import com.summer.core.domain.usecase.SearchMessagesPagingUseCase
+import com.summer.notifai.domain.repository.ISmsRepository
+import com.summer.notifai.domain.usecase.SearchContactsPagingUseCase
+import com.summer.notifai.domain.usecase.SearchConversationsPagingUseCase
+import com.summer.notifai.domain.usecase.SearchMessagesPagingUseCase
 import com.summer.core.util.CountryCodeProvider
 import com.summer.notifai.ui.datamodel.GlobalSearchListItem
 import com.summer.notifai.ui.datamodel.NewContactDataModel

@@ -1,8 +1,8 @@
 package com.summer.notifai.ui.search.globalsearch
 
-import com.summer.core.domain.usecase.SearchContactsUseCase
-import com.summer.core.domain.usecase.SearchConversationsUseCase
-import com.summer.core.domain.usecase.SearchMessagesUseCase
+import com.summer.notifai.domain.usecase.SearchContactsUseCase
+import com.summer.notifai.domain.usecase.SearchConversationsUseCase
+import com.summer.notifai.domain.usecase.SearchMessagesUseCase
 import com.summer.notifai.ui.datamodel.GlobalSearchListItem
 import com.summer.notifai.ui.datamodel.mapper.ContactInfoMapper.toContactMessageInfoDataModel
 import com.summer.notifai.ui.datamodel.mapper.NewContactMapper.toNewContactDataModel

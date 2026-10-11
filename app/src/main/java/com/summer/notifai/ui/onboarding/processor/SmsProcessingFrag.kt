@@ -15,7 +15,7 @@ import com.summer.core.android.phone.processor.ContactProcessor
 import com.summer.core.android.sms.constants.Constants.SMS_PROCESSING_WORK_NAME
 import com.summer.core.android.sms.model.SmsProcessingError
 import com.summer.core.android.sms.model.SmsProcessingStatus
-import com.summer.core.android.sms.service.SmsProcessingWorker
+import com.summer.classifier.SmsProcessingWorker
 import com.summer.core.domain.model.FetchResult
 import com.summer.core.ui.BaseFragment
 import com.summer.core.util.ResultState

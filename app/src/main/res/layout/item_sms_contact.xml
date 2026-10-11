@@ -26,13 +26,13 @@
             android:layout_marginVertical="@dimen/spacing_small"
             android:layout_marginStart="@dimen/spacing_small"
             android:background="@drawable/shape_circle_color_surface"
-            android:backgroundTint="?colorOnSecondary"
+            android:backgroundTint="?attr/colorPrimaryContainer"
             android:padding="@dimen/spacing_x_small"
             app:layout_constraintBottom_toBottomOf="@+id/separator"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:senderTypeIcon="@{model.senderType}"
-            app:tint="?colorOnPrimary" />
+            app:tint="?attr/colorOnPrimaryContainer" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tv_itemSmsContact_senderName"
@@ -58,7 +58,7 @@
             android:layout_marginHorizontal="@dimen/spacing_x_small"
             android:ellipsize="end"
             android:lines="1"
-            android:textColor="?colorOnPrimary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="13sp"
             app:htmlText="@{model.lastMessage}"
             app:layout_constraintBottom_toBottomOf="@+id/iv_itemSmsContact_icon"
@@ -76,7 +76,7 @@
             android:gravity="end"
             android:lines="1"
             android:text="@{model.lastMessageDate}"
-            android:textColor="?colorOnPrimary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@+id/tv_itemSmsContact_senderName"
             app:layout_constraintEnd_toEndOf="parent"
@@ -111,7 +111,7 @@
             android:layout_width="0dp"
             android:layout_height="0.5dp"
             android:layout_marginTop="@dimen/spacing_tiny"
-            android:background="?colorOnPrimary"
+            android:background="?attr/colorOutlineVariant"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@+id/tv_itemSmsContact_lastSms" />

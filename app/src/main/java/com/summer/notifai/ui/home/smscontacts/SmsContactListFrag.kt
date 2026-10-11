@@ -72,6 +72,10 @@ class SmsContactListFrag : BaseFragment<FragSmsContactListBinding>() {
             if (findNavController().currentDestination?.id == R.id.smsContactListFrag)
                 findNavController().navigate(R.id.action_home_to_search)
         }
+        mBinding.ivFragContactListTransactions.setOnClickListener {
+            if (findNavController().currentDestination?.id == R.id.smsContactListFrag)
+                findNavController().navigate(R.id.action_home_to_transactions)
+        }
         mBinding.ivFragContactListMore.setOnClickListener {
             if (findNavController().currentDestination?.id == R.id.smsContactListFrag)
                 findNavController().navigate(R.id.action_home_to_settings)

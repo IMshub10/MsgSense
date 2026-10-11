@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_banking"
+    app:startDestination="@id/bankingHomeFrag">
+
+    <fragment
+        android:id="@+id/bankingHomeFrag"
+        android:name="com.summer.notifai.ui.banking.home.BankingHomeFrag"
+        android:label="Banking"
+        tools:layout="@layout/frag_banking_home">
+        <action
+            android:id="@+id/action_bankingHome_to_accountDetail"
+            app:destination="@id/accountDetailFrag" />
+        <action
+            android:id="@+id/action_bankingHome_to_transactionDetail"
+            app:destination="@id/transactionDetailFrag" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/accountDetailFrag"
+        android:name="com.summer.notifai.ui.banking.account.AccountDetailFrag"
+        android:label="Account"
+        tools:layout="@layout/frag_account_detail">
+        <argument android:name="accountId" app:argType="long" />
+        <action
+            android:id="@+id/action_accountDetail_to_transactionDetail"
+            app:destination="@id/transactionDetailFrag" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/transactionListFrag"
+        android:name="com.summer.notifai.ui.banking.list.TransactionListFrag"
+        android:label="Transactions"
+        tools:layout="@layout/frag_transaction_list">
+        <action
+            android:id="@+id/action_transactionList_to_detail"
+            app:destination="@id/transactionDetailFrag" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/transactionDetailFrag"
+        android:name="com.summer.notifai.ui.banking.detail.TransactionDetailFrag"
+        android:label="Transaction">
+        <argument android:name="extractionId" app:argType="long" />
+        <action
+            android:id="@+id/action_transactionDetail_to_edit"
+            app:destination="@id/transactionEditFrag" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/transactionEditFrag"
+        android:name="com.summer.notifai.ui.banking.edit.TransactionEditFrag"
+        android:label="Edit Transaction">
+        <argument android:name="extractionId" app:argType="long" />
+    </fragment>
+</navigation>

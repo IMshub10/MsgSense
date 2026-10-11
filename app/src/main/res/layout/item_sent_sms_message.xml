@@ -43,7 +43,7 @@
                 android:linksClickable="true"
                 android:longClickable="false"
                 android:text="@{model.message}"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnPrimary"
                 android:textColorLink="@color/blue_link"
                 android:textIsSelectable="false"
                 android:textSize="14sp"
@@ -72,6 +72,7 @@
                     android:layout_width="14dp"
                     android:layout_height="14dp"
                     android:layout_marginStart="@dimen/spacing_tiny"
+                    app:tint="?attr/colorOnPrimary"
                     app:smsStatusIcon="@{model.status}"
                     tools:src="@drawable/ic_double_tick_24x24" />
 

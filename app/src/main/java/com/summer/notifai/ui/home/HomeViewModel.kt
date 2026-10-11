@@ -15,7 +15,7 @@ import androidx.work.WorkManager
 import com.summer.core.android.sms.constants.Constants.CONTACT_LIST_PAGE_SIZE
 import com.summer.core.android.sms.constants.Constants.SMS_PROCESSING_WORK_NAME
 import com.summer.core.android.sms.model.SmsProcessingStatus
-import com.summer.core.domain.usecase.GetSmsContactListByImportanceUseCase
+import com.summer.notifai.domain.usecase.GetSmsContactListByImportanceUseCase
 import com.summer.notifai.ui.datamodel.ContactMessageInfoDataModel
 import com.summer.notifai.ui.datamodel.mapper.ContactInfoMapper.toContactMessageInfoDataModel
 import dagger.hilt.android.lifecycle.HiltViewModel

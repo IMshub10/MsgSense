@@ -18,3 +18,37 @@ local.properties
 *.jks
 *.keystore
 keystore.properties
+
+# Rust — Cargo build output (e.g. banking_test JNI tokenizer)
+**/rust_tokenizer/target/
+
+# Rust cross-compiled JNI libs (built by buildRustTokenizerAndroid task)
+ner/src/main/jniLibs/
+
+# Large golden test fixture (generate locally or from CI artifact)
+app/src/main/assets/banking_test_onxx/golden_test.json
+app/src/main/assets/banking_test_tflite/golden_test.json
+
+# Generated NER v50 benchmark assets and host-side results
+app/src/albertV50/assets/ner_benchmark/
+app/src/bertBaseV50/assets/ner_benchmark/
+app/src/distilbertV50/assets/ner_benchmark/
+app/src/mobilebertV50/assets/ner_benchmark/
+benchmark-results/
+
+# Kotlin / Gradle caches
+.kotlin/
+
+# JVM heap dumps
+*.hprof
+
+.idea
+/app/src/google-services.json
+/app/google-services.json
+.cursor
+
+# Roborazzi generated comparisons. Synthetic baselines under app/src/test/snapshots stay tracked.
+**/build/outputs/roborazzi/
+**/build/test-results/roborazzi/
+**/build/reports/roborazzi/
+**/build/outputs/roborazzi-comparison/

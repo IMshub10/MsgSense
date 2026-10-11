@@ -4,10 +4,6 @@ import android.content.ContentResolver
 import android.content.Context
 import com.summer.core.android.sms.data.source.ISmsContentProvider
 import com.summer.core.android.sms.data.source.SmsContentProvider
-import com.summer.core.android.sms.processor.SmsBatchProcessor
-import com.summer.core.data.local.dao.SmsDao
-import com.summer.core.ml.model.SmsClassifierModel
-import com.summer.core.util.CountryCodeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,21 +25,5 @@ object SmsModule {
     @Singleton
     fun provideSmsContentProvider(contentResolver: ContentResolver): ISmsContentProvider {
         return SmsContentProvider(contentResolver)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSmsBatchProcessor(
-        smsContentProvider: ISmsContentProvider,
-        smsDao: SmsDao,
-        smsClassifierModel: SmsClassifierModel,
-        countryCodeProvider: CountryCodeProvider
-    ): SmsBatchProcessor {
-        return SmsBatchProcessor(
-            smsContentProvider,
-            smsDao,
-            smsClassifierModel,
-            countryCodeProvider
-        )
     }
 }

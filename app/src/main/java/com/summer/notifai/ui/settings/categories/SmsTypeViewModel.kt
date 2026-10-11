@@ -3,8 +3,8 @@ package com.summer.notifai.ui.settings.categories
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.summer.core.data.local.entities.SmsClassificationTypeEntity
-import com.summer.core.domain.usecase.GetSmsTypesUseCase
-import com.summer.core.domain.usecase.UpdateSmsTypeImportanceUseCase
+import com.summer.notifai.domain.usecase.GetSmsTypesUseCase
+import com.summer.notifai.domain.usecase.UpdateSmsTypeImportanceUseCase
 import com.summer.notifai.ui.datamodel.SmsTypeUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

@@ -7,4 +7,6 @@ interface NotificationIntentProvider {
     fun provideSummaryPendingIntent(): PendingIntent
     fun provideSmsInboxPendingIntent(senderAddressId: Long, smsImportanceType: SmsImportanceType): PendingIntent
     fun provideSmsProcessingPendingIntent(): PendingIntent
+    fun provideAppHomePendingIntent(): PendingIntent
+    fun provideBankingTransactionPendingIntent(extractionId: Long): PendingIntent
 }

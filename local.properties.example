@@ -1,0 +1,3 @@
+# Copy these values into the ignored local.properties file.
+sdk.dir=/path/to/Android/sdk
+msgsense.root=/path/to/MsgSenseML

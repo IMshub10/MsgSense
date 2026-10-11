@@ -29,6 +29,10 @@
         <action
             android:id="@+id/action_home_to_search"
             app:destination="@id/nav_search" />
+
+        <action
+            android:id="@+id/action_home_to_transactions"
+            app:destination="@id/nav_banking" />
     </fragment>
     
     <fragment

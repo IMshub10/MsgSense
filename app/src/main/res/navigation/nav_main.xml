@@ -76,6 +76,7 @@
 
     <!-- Home Nested Graph (renamed from nav_contact_list) -->
     <include app:graph="@navigation/nav_home" />
+    <include app:graph="@navigation/nav_banking" />
 
     <!-- SMS Inbox Fragment with SafeArgs -->
     <fragment
@@ -142,5 +143,9 @@
         app:destination="@id/smsInboxFragment"
         app:popUpTo="@id/nav_home"
         app:popUpToInclusive="false" />
+
+    <action
+        android:id="@+id/action_global_to_transaction_list"
+        app:destination="@id/nav_banking" />
 
 </navigation>

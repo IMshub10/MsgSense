@@ -109,7 +109,7 @@
 -keep class com.summer.core.data.local.entities.** { *; }
 -keep class com.summer.core.data.local.model.** { *; }
 -keep class com.summer.core.android.phone.data.entity.** { *; }
--keep class com.summer.core.ml.** { *; }
+-keep class com.summer.classifier.ml.** { *; }
 
 # Keep DataBinding BR classes
 -keep class com.summer.notifai.BR { *; }

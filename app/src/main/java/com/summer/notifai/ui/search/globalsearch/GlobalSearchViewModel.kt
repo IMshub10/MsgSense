@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
-import com.summer.core.domain.repository.ISmsRepository
+import com.summer.notifai.domain.repository.ISmsRepository
 import com.summer.core.util.CountryCodeProvider
 import com.summer.notifai.ui.datamodel.GlobalSearchListItem
 import com.summer.notifai.ui.datamodel.NewContactDataModel

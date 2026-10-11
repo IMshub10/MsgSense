@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,13 +7,7 @@ plugins {
     alias(libs.plugins.google.firebase.crashlytics)
     alias(libs.plugins.androidx.navigation.safe.args)
     alias(libs.plugins.baselineprofile)
-}
-
-// Load keystore properties
-val keystorePropertiesFile = rootProject.file("keystore.properties")
-val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(keystorePropertiesFile.inputStream())
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -32,34 +24,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        getByName("debug") {
-            // Uses default debug keystore
-        }
-        create("release") {
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-        }
-    }
-
     buildTypes {
         debug {
             isDebuggable = true
             isMinifyEnabled = false
             versionNameSuffix = "-debug"
-            signingConfig = signingConfigs.getByName("debug")
+            ndk {
+                abiFilters += listOf("arm64-v8a", "x86_64")
+            }
         }
         release {
             isDebuggable = false
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                abiFilters += "arm64-v8a"
+            }
         }
     }
 
@@ -74,41 +58,63 @@ android {
 
     buildFeatures {
         dataBinding = true
+        buildConfig = true
+    }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
+    androidResources {
+        noCompress += "onnx"
     }
 }
 
 baselineProfile {
-    // Don't build on every build - generate manually
     automaticGenerationDuringBuild = false
+}
+
+roborazzi {
+    outputDir.set(file("src/test/snapshots/images"))
+}
+
+tasks.register<VerifyBankRegistryTask>("verifyBankRegistry") {
+    group = "verification"
+    description = "Verify local bank registry coverage and actionable-service safety"
+    registrySource.set(rootProject.layout.projectDirectory.file("core/src/main/java/com/summer/core/util/BankRegistry.kt"))
+    logosDirectory.set(rootProject.layout.projectDirectory.dir("logos"))
+    reportFile.set(layout.buildDirectory.file("reports/bank-registry.txt"))
 }
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":ner"))
+    implementation(project(":classifier"))
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-
+    implementation(libs.androidx.lifecycle.livedata)
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.firebase.crashlytics)
 
-    // Hilt Dependencies
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.room.runtime)
+
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.work)
+    kapt(libs.androidx.hilt.hilt.compiler)
 
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.androidx.navigation.dynamic.features.fragment)
-
     androidTestImplementation(libs.androidx.navigation.testing)
 
-    //lottie
     implementation(libs.lottie)
-    
-    // Baseline Profile - improves cold start performance
     implementation(libs.androidx.profileinstaller)
     "baselineProfile"(project(":baselineprofile"))
 }
