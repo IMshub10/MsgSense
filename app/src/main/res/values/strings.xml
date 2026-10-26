@@ -147,6 +147,10 @@
     <string name="six_month_cash_flow">Six-month cash flow</string>
     <string name="recent_transactions">Recent transactions</string>
     <string name="preparing_accounts">Preparing your accounts…</string>
+    <plurals name="banking_analysis_failed">
+        <item quantity="one">Could not analyze %d banking message. Other transactions appear as they are ready.</item>
+        <item quantity="other">Could not analyze %d banking messages. Other transactions appear as they are ready.</item>
+    </plurals>
     <string name="day">Day</string>
     <string name="month">Month</string>
     <string name="year">Year</string>

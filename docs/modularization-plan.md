@@ -123,7 +123,8 @@ with MobileBERT as its engine, not just the model.
 
 ## 4. Current NER pipeline behavior (as-is)
 
-What the code does **today** (post removal of the app-startup trigger).
+What the code does **today**, including the banking fixes on
+`codex/fix-banking-transactions` (27 October 2026).
 
 ### Triggers (external entry points)
 - **Classification success** — classifier orchestration → `nerScheduler.enqueueBackfill()`.
@@ -133,7 +134,10 @@ What the code does **today** (post removal of the app-startup trigger).
   classification), so `enqueueBackfill()`'s `KEEP` on the shared backfill name still guarantees a
   single drain lane. Catches banking rows that were classified but never drained.
 - **Incoming banking SMS (realtime)** — `ReadSmsBroadCastReceiver` → `enqueueRealtime(sms)`.
-- ~~App startup~~ — **removed**.
+- **Versioned startup repair** — `NerStartupRecoveryWorker` repairs failed current-pipeline
+  banking runs once per installation and durably schedules backfill before saving its completion
+  marker. It preserves completed runs and corrections and suppresses historical purchase alerts.
+  This is a migration repair, not a recurring startup scan.
 - ~~Banking screen entry~~ — **removed** (`BankingHomeViewModel` / `TransactionListViewModel` no
   longer drive the drain; the daily backstop replaces this UI-driven trigger).
 
@@ -148,8 +152,16 @@ self-continuation uses `APPEND_OR_REPLACE` (baton pass).
 - Single **drain-to-empty loop** bounded only by `BACKFILL_MAX_RUN_MS` = 5 min (chunk size removed).
 - **One warm binding for the whole run:** model stays loaded up to ~5 min, then unloads
   (`client.close()`) before the next backfill worker.
-- Preempts for realtime work; on remaining `PENDING`, hands off to a fresh worker via a chain baton.
+- Checks realtime priority before inference and preempts for realtime work. Remaining backfill
+  always retains a serialized continuation: 10 seconds after realtime preemption, immediately
+  after the duration cap. It awaits durable enqueue before returning.
 - DATA_SYNC foreground service.
+
+### Native packaging
+- Variant JNI sources come from `ner/build/generated/jniLibs/`; normal Android builds compile
+  and verify the tokenizer for arm64-v8a and x86_64. APK ABI filters select the configured set.
+- `buildRustTokenizerAndroid` remains a manual aggregate task. Legacy `src/main/jniLibs`
+  output is excluded; Rust cache files live under `ner/build/`.
 
 ---
 

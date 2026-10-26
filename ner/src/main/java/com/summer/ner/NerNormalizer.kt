@@ -4,7 +4,7 @@ import java.math.BigDecimal
 
 object NerNormalizer {
     private val whitespace = Regex("\\s+")
-    private val currency = Regex("^(INR|RS\\.?|₹|USD|EUR|GBP|\\$|€)\\s*", RegexOption.IGNORE_CASE)
+    private val currency = Regex("^(INR|RS\\.?|₹|USD|EUR|GBP|\\$|€|£)\\s*", RegexOption.IGNORE_CASE)
 
     fun normalize(type: String, raw: String): String? = runCatching {
         val trimmed = raw.trim()

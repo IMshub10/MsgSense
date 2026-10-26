@@ -22,7 +22,7 @@ keystore.properties
 # Rust — Cargo build output (e.g. banking_test JNI tokenizer)
 **/rust_tokenizer/target/
 
-# Rust cross-compiled JNI libs (built by buildRustTokenizerAndroid task)
+# Legacy manually generated JNI libs; current Gradle tasks generate them under ner/build/.
 ner/src/main/jniLibs/
 
 # Large golden test fixture (generate locally or from CI artifact)

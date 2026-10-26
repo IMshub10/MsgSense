@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.summer.core.data.model.BankingOverview
 import com.summer.core.data.model.CategoryTotal
 import com.summer.core.data.model.CurrencyTotals
+import com.summer.core.data.local.model.NerProcessingSummary
 import com.summer.ner.banking.BankingRepository
 import com.summer.ner.banking.BankAccountOrganizationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +25,9 @@ class BankingHomeViewModel @Inject constructor(
     val overview = repository.observeOverview()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BankingOverview())
 
+    val processingSummary = repository.observeProcessingSummary()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NerProcessingSummary(0, 0, 0, 0, 0))
+
     private val range = MutableStateFlow(periodRange(Period.MONTH))
     val insights = range.flatMapLatest { repository.observeInsights(it.first, it.second) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList<CurrencyTotals>() to emptyList<CategoryTotal>())
@@ -37,7 +41,7 @@ class BankingHomeViewModel @Inject constructor(
     }
 
     fun setCustomRange(start: Long, endInclusive: Long) {
-        range.value = start to endInclusive + 1
+        range.value = BankingDateRange.fromPicker(start, endInclusive)
     }
 
     private fun periodRange(period: Period): Pair<Long, Long> {

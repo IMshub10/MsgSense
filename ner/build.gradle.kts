@@ -46,6 +46,9 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    // Older checkouts may still have manually built binaries here. Package only variant outputs.
+    sourceSets.getByName("main").jniLibs.setSrcDirs(emptyList<String>())
 }
 
 val installedNdk = providers.provider {
@@ -56,15 +59,9 @@ val installedNdk = providers.provider {
         ?: throw GradleException("Install an Android NDK before rebuilding the tokenizer JNI library.")
 }
 
-tasks.register<BuildRustTokenizerAndroidTask>("buildRustTokenizerAndroid") {
+val buildRustTokenizerAndroid = tasks.register("buildRustTokenizerAndroid") {
     group = "build setup"
     description = "Cross-compile Rust HF tokenizer JNI for Android (arm64-v8a + x86_64)"
-    val rustDir = file("src/main/java/com/summer/ner/tokenizer/rust_tokenizer")
-    sourceFiles.from(fileTree(rustDir) { include("src/**", "Cargo.toml", "Cargo.lock") })
-    rustDirectory.set(rustDir)
-    outputDirectory.set(layout.projectDirectory.dir("src/main/jniLibs"))
-    ndkDirectory.set(providers.environmentVariable("ANDROID_NDK_HOME").orElse(installedNdk))
-    cargoExecutable.set("${System.getProperty("user.home")}/.cargo/bin/cargo")
 }
 
 val msgSenseRoot = providers.provider {
@@ -92,6 +89,22 @@ val syncProductionNerAssets by tasks.registering(SyncProductionNerAssetsTask::cl
 
 androidComponents {
     onVariants(selector().all()) { variant ->
+        val tokenizerBuild = tasks.register<BuildRustTokenizerAndroidTask>(
+            "build${variant.name.replaceFirstChar(Char::uppercase)}RustTokenizerAndroid"
+        ) {
+            val rustDir = file("src/main/java/com/summer/ner/tokenizer/rust_tokenizer")
+            sourceFiles.from(fileTree(rustDir) { include("src/**", "Cargo.toml", "Cargo.lock") })
+            rustDirectory.set(rustDir)
+            cargoTargetDirectory.set(layout.buildDirectory.dir("rust-tokenizer"))
+            abis.set(listOf("arm64-v8a", "x86_64"))
+            ndkDirectory.set(providers.environmentVariable("ANDROID_NDK_HOME").orElse(installedNdk))
+            cargoExecutable.set("${System.getProperty("user.home")}/.cargo/bin/cargo")
+        }
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(
+            tokenizerBuild,
+            BuildRustTokenizerAndroidTask::outputDirectory,
+        )
+        buildRustTokenizerAndroid.configure { dependsOn(tokenizerBuild) }
         variant.sources.assets?.addGeneratedSourceDirectory(
             syncProductionNerAssets,
             SyncProductionNerAssetsTask::outputDirectory,
@@ -110,6 +123,11 @@ dependencies {
     kapt(libs.androidx.hilt.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.room.runtime)
+    testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.room.runtime)
 }

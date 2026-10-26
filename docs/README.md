@@ -2,7 +2,7 @@
 
 ## Current review and proposed direction
 
-- [PR #3 review](PR_3_REVIEW.md) — six open findings from merge `d55c104`, reproduction evidence, and validation limits.
+- [PR #3 review](PR_3_REVIEW.md) — six findings from merge `d55c104`, original evidence, fix resolutions, and validation limits.
 - [Financial backend plan](FINANCIAL_BACKEND_PLAN.md) — proposed ownership of financial processing, SMS/email reconciliation, prompt alerts, manual entries, and migration stages.
 
 The backend plan records the product discussion on 26 October 2026. It does not

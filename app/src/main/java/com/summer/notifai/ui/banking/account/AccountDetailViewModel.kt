@@ -20,12 +20,12 @@ class AccountDetailViewModel @Inject constructor(
     val account = repository.observeAccount(accountId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val allAccounts = repository.observeAccounts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun rename(name: String) = viewModelScope.launch { repository.renameAccount(accountId, name) }
     fun setHidden(hidden: Boolean) = viewModelScope.launch { repository.setAccountHidden(accountId, hidden) }
     fun assign(extractionId: Long, targetId: Long) =
         viewModelScope.launch { repository.assignTransaction(extractionId, targetId) }
     fun unassign(extractionId: Long) = viewModelScope.launch { repository.unassignTransaction(extractionId) }
-    fun merge(target: BankAccount) = viewModelScope.launch { repository.mergeAccounts(accountId, target.id) }
+    suspend fun merge(target: BankAccount): Boolean = repository.mergeAccounts(accountId, target.id)
 }

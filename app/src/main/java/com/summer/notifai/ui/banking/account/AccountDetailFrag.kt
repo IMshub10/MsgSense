@@ -106,8 +106,9 @@ class AccountDetailFrag : BaseFragment<FragAccountDetailBinding>() {
         if (candidates.isEmpty()) return
         MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.merge_account)
             .setItems(candidates.map { it.name }.toTypedArray()) { _, index ->
-                viewModel.merge(candidates[index])
-                findNavController().popBackStack()
+                viewLifecycleOwner.lifecycleScope.launch {
+                    if (viewModel.merge(candidates[index])) findNavController().popBackStack()
+                }
             }.show()
     }
 

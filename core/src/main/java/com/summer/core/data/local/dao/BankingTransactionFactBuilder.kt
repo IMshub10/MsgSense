@@ -28,6 +28,7 @@ object BankingTransactionFactBuilder {
         val ambiguityFlags = buildList {
             if (truncated) add("TRUNCATED")
             if (amount == null) add("MISSING_AMOUNT")
+            else if (amount.normalizedValue?.toBigDecimalOrNull() == null) add("INVALID_AMOUNT")
             if (normalizedDirection !in supportedDirections) add("UNSUPPORTED_DIRECTION")
             if (byType.count(NerEntityTypes.AMOUNT) > 1) add("MULTIPLE_AMOUNTS")
             if (byType.count(NerEntityTypes.ACCOUNT) > 1) add("MULTIPLE_ACCOUNTS")
@@ -36,7 +37,7 @@ object BankingTransactionFactBuilder {
         return BankingTransactionFactEntity(
             runId = runId,
             merchant = merchant?.rawText,
-            amount = amount?.normalizedValue,
+            amount = amount?.normalizedValue?.takeIf { it.toBigDecimalOrNull() != null },
             amountCurrency = amount?.rawText?.detectCurrency(),
             direction = normalizedDirection,
             bank = bank?.rawText,

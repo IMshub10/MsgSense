@@ -114,8 +114,7 @@ class BankingRepository @Inject constructor(
         if (source.canonicalBank != target.canonicalBank || source.instrumentType != target.instrumentType) {
             return false
         }
-        dao.mergeAccounts(sourceId, targetId, System.currentTimeMillis())
-        return true
+        return dao.mergeAccounts(sourceId, targetId, System.currentTimeMillis())
     }
 
     suspend fun saveOverride(

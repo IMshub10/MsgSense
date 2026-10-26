@@ -55,7 +55,7 @@ class BankAccountOrganizer @Inject constructor(
                 )
             ).takeIf { it > 0 } ?: requireNotNull(dao.bankAccountByFingerprint(fingerprint)).id
 
-            dao.upsertAccountLink(
+            dao.upsertResolvedAccountLink(
                 SmsTransactionAccountLinkEntity(
                     extractionId = candidate.extractionId,
                     accountId = accountId,
@@ -67,7 +67,7 @@ class BankAccountOrganizer @Inject constructor(
                 )
             )
             candidate.balance?.toDecimalOrNull()?.let { balance ->
-                dao.upsertBalanceObservation(
+                dao.upsertResolvedBalanceObservation(
                     BankAccountBalanceObservationEntity(
                         accountId = accountId,
                         sourceExtractionId = candidate.extractionId,
@@ -103,7 +103,7 @@ class BankAccountOrganizer @Inject constructor(
                 updatedAt = now,
             )
         ).takeIf { it > 0 } ?: requireNotNull(dao.bankAccountByFingerprint(identityFingerprint)).id
-        dao.upsertAccountLink(
+        dao.upsertResolvedAccountLink(
             SmsTransactionAccountLinkEntity(
                 extractionId = extractionId,
                 accountId = accountId,
@@ -114,7 +114,6 @@ class BankAccountOrganizer @Inject constructor(
                 updatedAt = now,
             )
         )
-        dao.reassignBalanceObservation(extractionId, accountId)
     }
 
     private fun fingerprint(value: String): String {

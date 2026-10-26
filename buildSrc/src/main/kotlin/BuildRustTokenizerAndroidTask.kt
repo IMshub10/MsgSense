@@ -2,6 +2,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -29,6 +30,12 @@ abstract class BuildRustTokenizerAndroidTask @Inject constructor(
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
+    @get:Internal
+    abstract val cargoTargetDirectory: DirectoryProperty
+
+    @get:Input
+    abstract val abis: ListProperty<String>
+
     @get:Input
     abstract val ndkDirectory: Property<String>
 
@@ -49,15 +56,18 @@ abstract class BuildRustTokenizerAndroidTask @Inject constructor(
         execOperations.exec { spec ->
             spec.workingDir(rustDirectory.get().asFile)
             spec.environment("ANDROID_NDK_HOME", ndk.absolutePath)
-            spec.environment("CARGO_TARGET_DIR", "./target")
+            spec.environment("CARGO_TARGET_DIR", cargoTargetDirectory.get().asFile.absolutePath)
             spec.commandLine(
-                cargo.absolutePath,
-                "ndk",
-                "-t", "arm64-v8a",
-                "-t", "x86_64",
-                "-o", outputDirectory.get().asFile.absolutePath,
-                "build", "--release",
+                listOf(cargo.absolutePath, "ndk") +
+                    abis.get().flatMap { listOf("-t", it) } +
+                    listOf("-o", outputDirectory.get().asFile.absolutePath, "build", "--release", "--locked")
             )
+        }
+        abis.get().forEach { abi ->
+            val library = outputDirectory.file("$abi/libhf_tokenizer_jni.so").get().asFile
+            if (!library.isFile || library.length() == 0L) {
+                throw GradleException("Missing tokenizer JNI library for $abi: ${library.absolutePath}")
+            }
         }
     }
 }

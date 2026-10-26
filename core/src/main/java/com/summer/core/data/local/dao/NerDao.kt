@@ -37,6 +37,36 @@ abstract class NerDao {
     @Query("SELECT * FROM bank_accounts WHERE identifier_fingerprint = :fingerprint LIMIT 1")
     abstract suspend fun bankAccountByFingerprint(fingerprint: String): BankAccountEntity?
 
+    @Query("SELECT * FROM bank_accounts WHERE id = :accountId")
+    abstract suspend fun bankAccountById(accountId: Long): BankAccountEntity?
+
+    @Transaction
+    open suspend fun survivingBankAccount(accountId: Long): BankAccountEntity {
+        val visited = mutableSetOf<Long>()
+        var account = checkNotNull(bankAccountById(accountId)) { "Bank account does not exist" }
+        val bank = account.canonicalBank
+        val type = account.instrumentType
+        while (true) {
+            check(visited.add(account.id)) { "Cyclic bank account merge" }
+            check(account.canonicalBank == bank && account.instrumentType == type) { "Incompatible bank account merge" }
+            val target = account.mergeTargetId ?: return account
+            account = checkNotNull(bankAccountById(target)) { "Bank account merge target does not exist" }
+        }
+    }
+
+    @Transaction
+    open suspend fun upsertResolvedAccountLink(link: SmsTransactionAccountLinkEntity) {
+        val target = survivingBankAccount(link.accountId)
+        upsertAccountLink(link.copy(accountId = target.id))
+        reassignBalanceObservation(link.extractionId, target.id)
+    }
+
+    @Transaction
+    open suspend fun upsertResolvedBalanceObservation(observation: BankAccountBalanceObservationEntity) {
+        val target = survivingBankAccount(observation.accountId)
+        upsertBalanceObservation(observation.copy(accountId = target.id))
+    }
+
     @Query("SELECT * FROM bank_accounts WHERE merge_target_id IS NULL ORDER BY created_at")
     abstract fun observeBankAccounts(): Flow<List<BankAccountEntity>>
 
@@ -67,8 +97,9 @@ abstract class NerDao {
 
     @Transaction
     open suspend fun reassignTransaction(extractionId: Long, accountId: Long, now: Long) {
-        reassignTransactionLink(extractionId, accountId, now)
-        reassignBalanceObservation(extractionId, accountId)
+        val target = survivingBankAccount(accountId)
+        reassignTransactionLink(extractionId, target.id, now)
+        reassignBalanceObservation(extractionId, target.id)
     }
 
     @Query("DELETE FROM sms_transaction_account_links WHERE extraction_id = :extractionId")
@@ -90,10 +121,67 @@ abstract class NerDao {
     abstract suspend fun markAccountMerged(sourceId: Long, targetId: Long, now: Long)
 
     @Transaction
-    open suspend fun mergeAccounts(sourceId: Long, targetId: Long, now: Long) {
-        moveAccountLinks(sourceId, targetId, now)
-        moveBalanceObservations(sourceId, targetId)
-        markAccountMerged(sourceId, targetId, now)
+    open suspend fun mergeAccounts(sourceId: Long, targetId: Long, now: Long): Boolean {
+        val source = survivingBankAccount(sourceId)
+        val target = survivingBankAccount(targetId)
+        if (source.id == target.id || source.canonicalBank != target.canonicalBank ||
+            source.instrumentType != target.instrumentType) return false
+        moveAccountLinks(source.id, target.id, now)
+        moveBalanceObservations(source.id, target.id)
+        markAccountMerged(source.id, target.id, now)
+        return true
+    }
+
+    @Query("SELECT * FROM bank_accounts WHERE merge_target_id IS NOT NULL")
+    abstract suspend fun mergedBankAccounts(): List<BankAccountEntity>
+
+    @Query("""
+        SELECT fact.* FROM banking_transaction_facts fact
+        INNER JOIN ner_runs run ON run.id = fact.run_id
+        WHERE run.status = 'COMPLETED' AND run.active = 1 AND fact.review_state = 'AI_EXTRACTED'
+    """)
+    abstract suspend fun extractedTransactionFacts(): List<BankingTransactionFactEntity>
+
+    @Query("""
+        UPDATE banking_transaction_facts
+        SET amount = NULL, review_state = 'NEEDS_REVIEW', ambiguity_flags = :flags, updated_at = :now
+        WHERE id = :factId
+    """)
+    abstract suspend fun markInvalidAmount(factId: Long, flags: String, now: Long)
+
+    @Query("""
+        UPDATE banking_ner_notifications SET state = 'NONE', suppression_reason = NULL,
+            posted_at = NULL, updated_at = :now
+        WHERE run_id IN (
+            SELECT run.id FROM ner_runs run INNER JOIN sms_messages sms ON sms.id = run.sms_id
+            WHERE run.active = 1 AND run.status = 'FAILED' AND run.pipeline_fingerprint = :fingerprint
+                AND sms.sms_classification_type_id = 2
+        )
+    """)
+    abstract suspend fun suppressFailedRecoveryNotifications(fingerprint: String, now: Long)
+
+    @Query("""
+        UPDATE ner_runs SET status = 'PENDING', priority = 'BACKFILL', attempts = 0,
+            started_at = NULL, completed_at = NULL, failure_code = NULL, failure_message = NULL, updated_at = :now
+        WHERE active = 1 AND status = 'FAILED' AND pipeline_fingerprint = :fingerprint
+            AND sms_id IN (SELECT id FROM sms_messages WHERE sms_classification_type_id = 2)
+    """)
+    abstract suspend fun requeueFailedBankingRuns(fingerprint: String, now: Long): Int
+
+    /** Repairs existing rows without changing run IDs or replacing user overrides. */
+    @Transaction
+    open suspend fun repairBankingData(fingerprint: String, now: Long): Int {
+        mergedBankAccounts().forEach { source ->
+            val target = survivingBankAccount(source.id)
+            moveAccountLinks(source.id, target.id, now)
+            moveBalanceObservations(source.id, target.id)
+        }
+        extractedTransactionFacts().filter { it.amount?.toBigDecimalOrNull() == null }.forEach { fact ->
+            val flags = fact.ambiguityFlags.orEmpty().split(',').filter(String::isNotBlank)
+            markInvalidAmount(fact.id, (flags + "INVALID_AMOUNT").distinct().joinToString(","), now)
+        }
+        suppressFailedRecoveryNotifications(fingerprint, now)
+        return requeueFailedBankingRuns(fingerprint, now)
     }
 
     @Query(
@@ -227,6 +315,9 @@ abstract class NerDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM ner_runs WHERE status = 'PENDING')")
     abstract suspend fun hasPending(): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM ner_runs WHERE status = 'PENDING' AND priority = :priority)")
+    abstract suspend fun hasPendingForPriority(priority: String): Boolean
 
     @Query(
         """

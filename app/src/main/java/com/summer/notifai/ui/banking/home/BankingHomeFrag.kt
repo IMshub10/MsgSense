@@ -19,6 +19,7 @@ import com.summer.notifai.databinding.FragBankingHomeBinding
 import com.summer.notifai.ui.banking.list.TransactionAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
 
 @AndroidEntryPoint
 class BankingHomeFrag : BaseFragment<FragBankingHomeBinding>() {
@@ -70,7 +71,9 @@ class BankingHomeFrag : BaseFragment<FragBankingHomeBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.overview.collect { overview ->
+                    combine(viewModel.overview, viewModel.processingSummary) { overview, summary ->
+                        overview to summary
+                    }.collect { (overview, summary) ->
                         val visibleAccounts = overview.accounts.filterNot { it.isHidden }
                         accountAdapter.submitList(overview.accounts)
                         recentAdapter.submitList(overview.recentTransactions)
@@ -78,6 +81,19 @@ class BankingHomeFrag : BaseFragment<FragBankingHomeBinding>() {
                         bindTotals(mBinding.dashboardTotals, overview.currentMonthTotals)
                         mBinding.cashFlow.submit(overview.sixMonthCashFlow)
                         mBinding.empty.visibility = if (overview.accounts.isEmpty()) View.VISIBLE else View.GONE
+                        val status = when {
+                            summary.activeCount > 0 -> getString(R.string.analyzing_transactions)
+                            summary.failedCount > 0 -> resources.getQuantityString(
+                                R.plurals.banking_analysis_failed, summary.failedCount, summary.failedCount
+                            )
+                            summary.eligibleCount > summary.completedCount -> getString(R.string.preparing_transaction_analysis)
+                            overview.recentTransactions.isNotEmpty() -> getString(R.string.preparing_accounts)
+                            else -> getString(R.string.no_transactions)
+                        }
+                        mBinding.empty.text = status
+                        mBinding.dashboardStatus.text = status
+                        mBinding.dashboardStatus.visibility =
+                            if (overview.recentTransactions.isEmpty()) View.VISIBLE else View.GONE
                     }
                 }
                 launch {

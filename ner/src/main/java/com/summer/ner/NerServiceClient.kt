@@ -16,7 +16,7 @@ import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-class NerServiceClient(private val context: Context) : AutoCloseable {
+class NerServiceClient(private val context: Context) : NerExtractionClient {
     @Volatile private var remote: Messenger? = null
     @Volatile private var bound = false
     @Volatile private var connectContinuation: CancellableContinuation<Unit>? = null
@@ -58,7 +58,7 @@ class NerServiceClient(private val context: Context) : AutoCloseable {
         override fun onBindingDied(name: ComponentName?) = onServiceDisconnected(name)
     }
 
-    suspend fun extract(smsId: Long, sender: String, body: String): NerInferenceResult {
+    override suspend fun extract(smsId: Long, sender: String, body: String): NerInferenceResult {
         ensureBound()
         return suspendCancellableCoroutine { continuation ->
             check(responseContinuation == null) { "NER service client only supports one active request" }
@@ -149,3 +149,6 @@ class NerServiceClient(private val context: Context) : AutoCloseable {
 }
 
 class NerRemoteException(val code: String, message: String?) : RuntimeException(message)
+
+internal fun Throwable.nerFailureCode(): String =
+    (this as? NerRemoteException)?.code?.takeIf(String::isNotBlank) ?: javaClass.simpleName

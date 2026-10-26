@@ -6,6 +6,7 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
+import androidx.work.Operation
 import androidx.work.WorkManager
 import com.summer.core.data.local.dao.NerDao
 import com.summer.core.data.local.entities.SmsEntity
@@ -15,6 +16,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Singleton
 class NerWorkScheduler @Inject constructor(
@@ -28,7 +31,7 @@ class NerWorkScheduler @Inject constructor(
     }
 
     override fun enqueueBackfill() {
-        // External trigger (classification success, banking-fragment entry): KEEP dedups into the
+        // External trigger (classification success, startup repair, daily backstop): KEEP dedups into the
         // drain already running — the unique name is the lock.
         enqueueBackfillWorker(delayMs = 0, policy = ExistingWorkPolicy.KEEP)
         enqueueNotificationRecovery()
@@ -37,14 +40,23 @@ class NerWorkScheduler @Inject constructor(
 
     fun enqueueNextRealtime() = enqueueRealtimeWorker()
 
-    fun resumeBackfillAfterQuietPeriod(chainId: String, chainIndex: Int) =
-        // Self-continuation baton pass: APPEND_OR_REPLACE (KEEP would drop itself and kill the chain).
-        enqueueBackfillWorker(
-            delayMs = 0,
-            policy = ExistingWorkPolicy.APPEND_OR_REPLACE,
-            chainId = chainId,
-            chainIndex = chainIndex,
-        )
+    suspend fun resumeBackfillAfterQuietPeriod(chainId: String, chainIndex: Int, realtimePreempted: Boolean = false) =
+        withContext(Dispatchers.IO) {
+            // KEEP would drop a running worker's own continuation.
+            enqueueBackfillWorker(
+                delayMs = if (realtimePreempted) REALTIME_YIELD_MS else 0,
+                policy = ExistingWorkPolicy.APPEND_OR_REPLACE,
+                chainId = chainId,
+                chainIndex = chainIndex,
+            ).result.get()
+            Unit
+        }
+
+    /** Startup repair must not mark itself complete until WorkManager has persisted the drain. */
+    suspend fun enqueueRecoveryBackfill() = withContext(Dispatchers.IO) {
+        enqueueBackfillWorker(delayMs = 0, policy = ExistingWorkPolicy.KEEP).result.get()
+        Unit
+    }
 
     fun enqueueResultNotification(extractionId: Long, coordinatorId: java.util.UUID) {
         val request = OneTimeWorkRequestBuilder<NerResultNotificationWorker>()
@@ -88,7 +100,7 @@ class NerWorkScheduler @Inject constructor(
         policy: ExistingWorkPolicy,
         chainId: String? = null,
         chainIndex: Int = 0,
-    ) {
+    ): Operation {
         val inputData = Data.Builder()
             .putString(NerCoordinatorWorker.INPUT_MODE, MODE_BACKFILL)
         // Only self-continuations carry a chain id; external triggers start a fresh chain so the
@@ -102,7 +114,7 @@ class NerWorkScheduler @Inject constructor(
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
             .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
             .build()
-        WorkManager.getInstance(context).enqueueUniqueWork(
+        return WorkManager.getInstance(context).enqueueUniqueWork(
             BACKFILL_WORK_NAME,
             policy,
             request,
@@ -110,6 +122,7 @@ class NerWorkScheduler @Inject constructor(
     }
 
     companion object {
+        const val REALTIME_YIELD_MS = 10_000L
         const val MODE_REALTIME = "realtime"
         const val MODE_BACKFILL = "backfill"
         private const val REALTIME_WORK_NAME = "production_mobilebert_ner_realtime"
